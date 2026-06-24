@@ -180,6 +180,18 @@ GpioHelper::output("GPIO_06", 1);    // 仅 GPIO_06 / GPIO_85 预留
 - [`Z21_TC002_Demo/README.md`](Z21_TC002_Demo/README.md) — 各硬件外设 Demo 的 API 说明（含旋钮/按键码、SPI、Audio、MIC、Wi-Fi/BLE、GPIO）
 - [FlyThings 依赖包仓库](https://package.flythings.cn/)
 
+## 🛠️ 社区开发者工具 (Community Tools)
+
+### 🌐 [TC002 Web 模拟器与像素工作室 (Live Demo)](https://puritysb.github.io/tc002-emulator/)
+一个基于网页的高保真 Ulanzi TC002（52x16 LED 点阵）交互式模拟器和视觉布局设计工作室，可在浏览器中实时预览画面和动画。
+
+* **5 级触觉字体缩放**: 瞬间调整 5 档物理字体大小，支持从紧凑的 `Mini (2x3)` 到占满全屏的 `Giant (10x15)` 像素点阵实时间距膨胀。
+* **像素混合与特效渲染 (Pixel Blending & Shaders)**: 支持将动态背景可视化效果（熔岩波浪、网络扫掠格点）与先进的文本特效（对流火焰粒子、掩膜矩阵代码雨）进行加色/透明度混合合成。
+* **物理麦克风波形 scope**: 利用浏览器 Web Audio API 捕获真实声音输入，并将实时波形能量投影为动感的 CRT 绿磷光示波器波纹。
+* **物理旋钮与面板控制**: 支持在浏览器中直接模拟双向 WebSocket 数据帧、旋钮旋转、物理按键点击音效和状态 LED 点亮状态。
+
+*开源代码仓库: [puritysb/tc002-emulator](https://github.com/puritysb/tc002-emulator)*
+
 ## 许可
 
 本项目主体代码采用 **[GNU General Public License v3.0 or later (GPL-3.0-or-later)](LICENSE)** 发布。
