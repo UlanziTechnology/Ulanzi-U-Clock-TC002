@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 王行知
+#
+# TC002 Git 贡献热力图
+# 在 TC002 上显示 GitHub 贡献热力图。
+
+blueprint:
+  name: TC002 Git 贡献热力图
+  description: |
+    在 TC002 上显示 GitHub 贡献热力图，52 列 × 7 行日历点阵。
+    有提交的日期按提交量显示不同亮度绿色。
+
+    Author: 王行知
+    License: GPL-3.0-or-later
+  domain: automation
+  source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/git-contribution-heatmap/blueprint.yaml
+  input:
+    custom_app_topic:
+      name: TC002 Custom App MQTT topic
+      description: 格式：[PREFIX]/custom/[APP_NAME]
+      default: ulanzi_1bf6/custom/git_heatmap
+      selector:
+        text: {}
+    display_duration:
+      name: 显示时长
+      description: payload duration 值，单位秒。
+      default: 31536000
+      selector:
+        number:
+          min: 1
+          max: 31536000
+          unit_of_measurement: s
+          mode: box
+    update_hour:
+      name: 更新时间（小时）
+      description: 每天几点更新热力图（0-23）
+      default: 9
+      selector:
+        number:
+          min: 0
+          max: 23
+          unit_of_measurement: "h"
+          mode: box
+
+mode: restart
+
+trigger:
+  - platform: time
+    at: !input update_hour
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input custom_app_topic
+      retain: true
+      payload: >-
+        {"duration": {{ display_duration | int }}, "text": [], "image": [{"data": "", "position": [0, 0]}], "draw": []}
