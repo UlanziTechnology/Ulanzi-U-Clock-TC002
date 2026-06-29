@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 王行知
+#
+# TC002 CI 状态看板
+# 在 TC002 上显示 GitHub Actions CI 状态。
+
+blueprint:
+  name: TC002 CI 状态看板
+  description: |
+    在 TC002 上显示 GitHub Actions CI 状态。
+    绿色=通过，黄色=运行中，红色=失败。
+
+    Author: 王行知
+    License: GPL-3.0-or-later
+  domain: automation
+  source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/ci-status-board/blueprint.yaml
+  input:
+    custom_app_topic:
+      name: TC002 Custom App MQTT topic
+      description: 格式：[PREFIX]/custom/[APP_NAME]
+      default: ulanzi_1bf6/custom/ci_status
+      selector:
+        text: {}
+    github_repo:
+      name: GitHub 仓库
+      description: 要监控的仓库，格式：owner/repo
+      default: UlanziTechnology/Ulanzi-U-Clock-TC002
+      selector:
+        text: {}
+    github_token:
+      name: GitHub Token（可选）
+      description: 私有仓库需要 Token
+      default: ""
+      selector:
+        text: {}
+    display_duration:
+      name: 显示时长
+      description: payload duration 值，单位秒。
+      default: 31536000
+      selector:
+        number:
+          min: 1
+          max: 31536000
+          unit_of_measurement: s
+          mode: box
+
+mode: restart
+
+trigger:
+  - platform: time
+    minutes: "/5"
+    seconds: 0
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input custom_app_topic
+      retain: true
+      payload: >-
+        {"duration": {{ display_duration | int }}, "text": [], "image": [{"data": "", "position": [0, 0]}], "draw": []}
