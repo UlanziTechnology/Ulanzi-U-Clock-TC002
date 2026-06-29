@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 王行知
+#
+# TC002 单词轮播
+# 从 CSV 词表读取单词，在 TC002 上轮播显示。
+
+blueprint:
+  name: TC002 单词轮播
+  description: |
+    把 TC002 变成桌面背单词小屏幕。
+    从 CSV 词表读取单词，随机抽取显示。
+
+    Author: 王行知
+    License: GPL-3.0-or-later
+  domain: automation
+  source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/vocabulary-widget/blueprint.yaml
+  input:
+    custom_app_topic:
+      name: TC002 Custom App MQTT topic
+      description: 格式：[PREFIX]/custom/[APP_NAME]
+      default: ulanzi_1bf6/custom/vocabulary
+      selector:
+        text: {}
+    display_duration:
+      name: 显示时长
+      description: payload duration 值，单位秒。
+      default: 31536000
+      selector:
+        number:
+          min: 1
+          max: 31536000
+          unit_of_measurement: s
+          mode: box
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input custom_app_topic
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input custom_app_topic
+      retain: true
+      payload: >-
+        {"duration": {{ display_duration | int }}, "text": [], "image": [{"data": "", "position": [0, 0]}], "draw": []}
