@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 王行知
+#
+# TC002 应援灯牌
+# 心跳、烟花、流星动画 + 自定义滚动文字。
+
+blueprint:
+  name: TC002 应援灯牌
+  description: |
+    把 TC002 变成表白神器 / 演唱会应援灯牌。
+    支持心跳、烟花、流星动画，以及自定义滚动文字。
+
+    Author: 王行知
+    License: GPL-3.0-or-later
+  domain: automation
+  source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/love-confession/blueprint.yaml
+  input:
+    custom_app_topic:
+      name: TC002 Custom App MQTT topic
+      description: 格式：[PREFIX]/custom/[APP_NAME]
+      default: ulanzi_1bf6/custom/love_confession
+      selector:
+        text: {}
+    display_duration:
+      name: 显示时长
+      description: payload duration 值，单位秒。
+      default: 31536000
+      selector:
+        number:
+          min: 1
+          max: 31536000
+          unit_of_measurement: s
+          mode: box
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input custom_app_topic
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input custom_app_topic
+      retain: true
+      payload: >-
+        {"duration": {{ display_duration | int }}, "text": [], "image": [{"data": "", "position": [0, 0]}], "draw": []}
