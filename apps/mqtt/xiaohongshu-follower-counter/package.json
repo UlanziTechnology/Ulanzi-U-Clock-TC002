@@ -10,6 +10,9 @@
   "scripts": {
     "preview": "node bridge/render-preview.js",
     "start": "node bridge/server.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test",
+    "check:syntax": "node --check bridge/config.js && node --check bridge/mqtt.js && node --check bridge/png.js && node --check bridge/render.js && node --check bridge/server.js && node --check extension/content.js && node --check extension/extractor.js && node --check extension/options.js && node --check extension/service-worker.js",
+    "check:release": "node scripts/check-release.js",
+    "check": "npm test && npm run check:syntax && npm run check:release"
   }
 }
