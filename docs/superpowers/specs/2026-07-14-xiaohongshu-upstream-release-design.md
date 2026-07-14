@@ -37,7 +37,7 @@ Chrome 设置页动态保存每台电脑自己的主页列表、刷新周期、B
 环境变量读取 MQTT 与 HTTP 配置。MQTT client ID 未配置时在当前进程动态生成。代码只使用相对项目
 路径和标准 Node.js/Chrome API，不依赖 macOS、Windows 或 Linux 的专属目录结构或 shell 行为。
 
-允许提供安全、可覆盖的示例或默认值，例如 `http://127.0.0.1:17321`、刷新 15 分钟和示例 MQTT
+允许提供安全、可覆盖的示例或默认值，例如 `http://127.0.0.1:17321`、刷新 30 秒和示例 MQTT
 topic。`127.0.0.1` 是所有受支持电脑共有的 loopback 地址，用于确保浏览器数据不会暴露到局域网；
 它不是开发机专属地址。端口和完整 Bridge URL 均可配置，但发布版 Bridge 仍只允许绑定 loopback。
 
@@ -70,10 +70,15 @@ apps/mqtt/xiaohongshu-follower-counter/
 - 使用 Manifest V3，版本号与 `package.json` 一致。
 - 权限仅限调度、设置、临时标签页、小红书主页及 IPv4 loopback Bridge。
 - 不申请 `cookies`、`webRequest`、`<all_urls>` 或浏览历史权限。
-- 设置页提供主页 URL、刷新间隔、Bridge URL、共享令牌和最近运行状态。
+- 设置页提供主页 URL、按秒计算的刷新间隔、Bridge URL、共享令牌和最近运行状态。
 - 首次安装使用通用默认值；保存后所有采集目标和连接参数均来自 `chrome.storage.local`，不得回退到
   开发期间使用的真实主页或令牌。
-- 最低刷新周期保持 5 分钟，不实现验证码、登录或访问限制绕过。
+- 刷新配置使用 `refreshSeconds`，默认 30 秒，最低 5 秒；旧版 `refreshMinutes` 在首次运行时
+  自动换算为秒并删除旧字段，避免升级后静默改变用户周期。
+- 调度继续使用 `chrome.alarms`，把秒换算为 fractional minutes。该 5 秒周期面向仓库文档要求的
+  “加载已解压扩展”模式；正式打包分发时 Chrome 可能把周期限制为至少 30 秒。
+- 设置页明确提示 5 秒只适合短期联调，长期运行建议至少 60 秒，以降低登录验证和访问限流风险。
+- 不实现验证码、登录或访问限制绕过。
 - 扩展目录本身必须可直接加载；图标使用项目自有简单像素素材，不包含第三方商标素材。
 
 ## Bridge 发布要求
@@ -105,7 +110,7 @@ apps/mqtt/xiaohongshu-follower-counter/
 
 - 粉丝数字和 `万/亿/k/m` 单位转换；
 - 小红书内嵌 JSON 与真实 DOM 统计顺序；
-- 扩展权限、消息字段、刷新周期和版本一致性；
+- 扩展权限、消息字段、5 秒下限、秒到 fractional minutes 换算、旧分钟配置迁移和版本一致性；
 - Windows、macOS、Linux 共用的相对路径与运行时配置契约；
 - 扫描源码和清单，拒绝开发机绝对路径、真实主页 ID、固定 broker、固定凭证和固定设备标识；
 - HTTP loopback 绑定、CORS、Bearer 鉴权与输入限制；
