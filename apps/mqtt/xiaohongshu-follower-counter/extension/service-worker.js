@@ -58,10 +58,13 @@ async function refreshProfiles() {
 async function handleSnapshot(input, sender) {
   const snapshot = sanitizeSnapshot(input);
   const config = await chrome.storage.local.get(DEFAULTS);
-  const endpoint = bridgeEndpoint(config.bridgeUrl);
-  if (!config.bridgeToken) throw new Error("请先在扩展设置中配置桥接令牌");
 
   try {
+    if (!config.profileUrls.some((profileUrl) => canonicalProfileUrl(profileUrl) === snapshot.profileUrl)) {
+      throw new Error("profile_not_configured");
+    }
+    const endpoint = bridgeEndpoint(config.bridgeUrl);
+    if (!config.bridgeToken) throw new Error("请先在扩展设置中配置桥接令牌");
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -102,12 +105,13 @@ async function handleExtractError(error, sender) {
 }
 
 function sanitizeSnapshot(input) {
-  if (!input || !isProfileUrl(input.profileUrl)) throw new Error("invalid_profile_url");
+  const profileUrl = input ? canonicalProfileUrl(input.profileUrl) : null;
+  if (!profileUrl) throw new Error("invalid_profile_url");
   if (!Number.isInteger(input.followerCount) || input.followerCount < 0 || input.followerCount > 1_000_000_000) {
     throw new Error("invalid_follower_count");
   }
   return {
-    profileUrl: input.profileUrl,
+    profileUrl,
     displayName: String(input.displayName || "小红书用户").slice(0, 80),
     followerCount: input.followerCount,
     observedAt: Number.isFinite(Date.parse(input.observedAt)) ? input.observedAt : new Date().toISOString(),
@@ -115,13 +119,20 @@ function sanitizeSnapshot(input) {
 }
 
 function isProfileUrl(value) {
+  return canonicalProfileUrl(value) !== null;
+}
+
+function canonicalProfileUrl(value) {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" &&
-      ["www.xiaohongshu.com", "xiaohongshu.com"].includes(url.hostname) &&
-      url.pathname.startsWith("/user/profile/");
+    if (url.protocol !== "https:" ||
+      !["www.xiaohongshu.com", "xiaohongshu.com"].includes(url.hostname) ||
+      !url.pathname.startsWith("/user/profile/")) return null;
+    url.search = "";
+    url.hash = "";
+    return url.toString();
   } catch {
-    return false;
+    return null;
   }
 }
 

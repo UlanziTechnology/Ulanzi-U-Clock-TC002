@@ -32,6 +32,8 @@ test("service worker enforces a five-minute minimum and posts to loopback bridge
   assert.match(source, /Authorization/);
   assert.match(source, /Bearer/);
   assert.match(source, /profileUrl.*displayName.*followerCount.*observedAt/s);
+  assert.match(source, /profileUrls\.some/);
+  assert.match(source, /profile_not_configured/);
   assert.doesNotMatch(source, /cookie/i);
 });
 

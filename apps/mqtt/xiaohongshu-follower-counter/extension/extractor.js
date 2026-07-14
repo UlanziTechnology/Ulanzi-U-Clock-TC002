@@ -144,11 +144,23 @@ function extractFromDom(document) {
       element.parentElement,
     ];
     for (const candidate of nearby) {
-      const count = parseCompactCount(candidate?.textContent ?? "");
+      const candidateText = candidate?.textContent ?? "";
+      const contextualCount = parseFollowerContext(candidateText);
+      if (contextualCount !== null) return contextualCount;
+      const isAdjacentValue = candidate === element.previousElementSibling || candidate === element.nextElementSibling;
+      const count = isAdjacentValue ? parseCompactCount(candidateText) : null;
       if (count !== null) return count;
     }
   }
   return null;
+}
+
+function parseFollowerContext(text) {
+  const number = "([\\d,.]+\\s*(?:万|亿|[kKmM])?)";
+  const after = text.match(new RegExp(`粉丝\\s*[:：]?\\s*${number}`));
+  if (after) return parseCompactCount(after[1]);
+  const before = text.match(new RegExp(`${number}\\s*粉丝`));
+  return before ? parseCompactCount(before[1]) : null;
 }
 
 function findNameInText(text) {

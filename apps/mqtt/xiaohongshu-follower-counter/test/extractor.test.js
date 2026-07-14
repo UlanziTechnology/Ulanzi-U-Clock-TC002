@@ -66,6 +66,20 @@ test("extractFollowerSnapshot falls back to visible DOM near 粉丝 label", () =
   );
 });
 
+test("extractFollowerSnapshot selects the number adjacent to 粉丝 in a combined stats row", () => {
+  const parent = fakeElement("关注 12 粉丝 8.7万 获赞与收藏 999");
+  const document = fakeDocument({ elements: [fakeElement("粉丝", parent)] });
+
+  assert.equal(
+    extractFollowerSnapshot(
+      document,
+      "https://www.xiaohongshu.com/user/profile/combined",
+      "2026-07-14T12:01:00.000Z",
+    ).followerCount,
+    87000,
+  );
+});
+
 test("extractFollowerSnapshot rejects non-profile URLs and missing counts", () => {
   assert.throws(
     () => extractFollowerSnapshot(fakeDocument({}), "https://example.com/user/1"),
