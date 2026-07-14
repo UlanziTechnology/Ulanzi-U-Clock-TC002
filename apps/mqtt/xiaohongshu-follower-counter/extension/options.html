@@ -16,7 +16,7 @@
   </head>
   <body>
     <h1>TC002 小红书粉丝数</h1>
-    <p>页面数据只会发送到本机 127.0.0.1，不会上传到第三方服务。</p>
+    <p>这些设置只保存在当前电脑的 Chrome 中。页面数据只会发送到本机 127.0.0.1，不会上传到第三方服务。</p>
 
     <label for="profileUrls">小红书用户主页 URL（每行一个）</label>
     <textarea id="profileUrls" placeholder="https://www.xiaohongshu.com/user/profile/..."></textarea>
@@ -26,10 +26,11 @@
 
     <label for="bridgeUrl">本地桥接地址</label>
     <input id="bridgeUrl" type="url" value="http://127.0.0.1:17321">
+    <p class="hint">默认端口为 17321；如当前电脑上的 Bridge 使用其他端口，请在这里修改。</p>
 
     <label for="bridgeToken">共享令牌</label>
     <input id="bridgeToken" type="password" autocomplete="off">
-    <p class="hint">必须与启动桥接时的 XHS_BRIDGE_TOKEN 完全一致。</p>
+    <p class="hint">必须与当前电脑启动 Bridge 时设置的 XHS_BRIDGE_TOKEN 完全一致。</p>
 
     <button id="save" type="button">保存</button><span id="status"></span>
     <pre id="lastResult"></pre>

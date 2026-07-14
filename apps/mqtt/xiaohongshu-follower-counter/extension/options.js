@@ -28,8 +28,8 @@ async function save() {
     const profileUrls = document.querySelector("#profileUrls").value
       .split(/\r?\n/)
       .map((value) => value.trim())
-      .filter(Boolean);
-    for (const value of profileUrls) assertProfileUrl(value);
+      .filter(Boolean)
+      .map(canonicalProfileUrl);
 
     const refreshMinutes = Math.max(5, Math.floor(Number(document.querySelector("#refreshMinutes").value) || 15));
     const bridgeUrl = document.querySelector("#bridgeUrl").value.trim();
@@ -44,11 +44,14 @@ async function save() {
   }
 }
 
-function assertProfileUrl(value) {
+function canonicalProfileUrl(value) {
   const url = new URL(value);
   if (url.protocol !== "https:" || !["www.xiaohongshu.com", "xiaohongshu.com"].includes(url.hostname) || !url.pathname.startsWith("/user/profile/")) {
     throw new Error(`不是有效的小红书用户主页：${value}`);
   }
+  url.search = "";
+  url.hash = "";
+  return url.toString();
 }
 
 function assertBridgeUrl(value) {

@@ -15,6 +15,7 @@ test("manifest uses MV3 with narrowly scoped permissions", async () => {
   assert.ok(!manifest.permissions.includes("cookies"));
   assert.ok(!manifest.permissions.includes("webRequest"));
   assert.equal(manifest.background.type, "module");
+  assert.match(manifest.description, /本地|local/i);
 });
 
 test("content script imports the tested extractor and sends only a snapshot", async () => {
@@ -35,6 +36,9 @@ test("service worker enforces a five-minute minimum and posts to loopback bridge
   assert.match(source, /profileUrls\.some/);
   assert.match(source, /profile_not_configured/);
   assert.doesNotMatch(source, /cookie/i);
+  assert.match(source, /chrome\.storage\.local\.get\(DEFAULTS\)/);
+  assert.doesNotMatch(source, /\/user\/profile\/[0-9a-f]{20,}/i);
+  assert.doesNotMatch(source, /chrome-extension:\/\/[a-p]{32}/);
 });
 
 test("options page exposes profile, refresh, bridge, and token settings", async () => {
@@ -42,4 +46,16 @@ test("options page exposes profile, refresh, bridge, and token settings", async 
   for (const id of ["profileUrls", "refreshMinutes", "bridgeUrl", "bridgeToken"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`));
   }
+  assert.match(html, /当前电脑/);
+  assert.match(html, /端口/);
+});
+
+test("options save canonical per-machine settings without temporary profile parameters", async () => {
+  const source = await readFile(new URL("options.js", EXTENSION), "utf8");
+  assert.match(source, /chrome\.storage\.local\.get\(DEFAULTS\)/);
+  assert.match(source, /chrome\.storage\.local\.set/);
+  assert.match(source, /canonicalProfileUrl/);
+  assert.match(source, /url\.search\s*=\s*["']["']/);
+  assert.match(source, /url\.hash\s*=\s*["']["']/);
+  assert.doesNotMatch(source, /\/user\/profile\/[0-9a-f]{20,}/i);
 });
