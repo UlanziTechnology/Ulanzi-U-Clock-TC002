@@ -37,7 +37,10 @@ test("service worker schedules second-based refreshes without overlapping batche
   assert.match(source, /Authorization/);
   assert.match(source, /Bearer/);
   assert.match(source, /profileUrl.*displayName.*followerCount.*observedAt/s);
-  assert.match(source, /profileUrls\.some/);
+  assert.match(source, /bindings/);
+  assert.match(source, /deviceIp/);
+  assert.match(source, /lastResults/);
+  assert.match(source, /Promise\.allSettled/);
   assert.match(source, /profile_not_configured/);
   assert.doesNotMatch(source, /cookie/i);
   assert.match(source, /chrome\.storage\.local\.get\(DEFAULTS\)/);
@@ -47,9 +50,11 @@ test("service worker schedules second-based refreshes without overlapping batche
 
 test("options page exposes profile, refresh, bridge, and token settings", async () => {
   const html = await readFile(new URL("options.html", EXTENSION), "utf8");
-  for (const id of ["profileUrls", "refreshSeconds", "bridgeUrl", "bridgeToken"]) {
+  for (const id of ["bindings", "addBinding", "refreshSeconds", "bridgeUrl", "bridgeToken"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`));
   }
+  assert.match(html, /TC002 设备 IP/);
+  assert.doesNotMatch(html, /id=["']profileUrls["']/);
   assert.match(html, /刷新间隔（秒，最少 5）/);
   assert.match(html, /id="refreshSeconds"[^>]*min="5"[^>]*step="1"[^>]*value="30"/);
   assert.match(html, /5 秒/);
@@ -61,14 +66,17 @@ test("options page exposes profile, refresh, bridge, and token settings", async 
 
 test("options save canonical per-machine settings without temporary profile parameters", async () => {
   const source = await readFile(new URL("options.js", EXTENSION), "utf8");
+  const bindingsSource = await readFile(new URL("bindings-config.js", EXTENSION), "utf8");
   assert.match(source, /chrome\.storage\.local\.get\(DEFAULTS\)/);
   assert.match(source, /chrome\.storage\.local\.set/);
   assert.match(source, /canonicalProfileUrl/);
+  assert.match(source, /migrateBindings/);
+  assert.match(source, /normalizeBindings/);
   assert.match(source, /normalizeRefreshSeconds/);
   assert.match(source, /migrateRefreshSeconds/);
   assert.match(source, /refreshSeconds/);
   assert.doesNotMatch(source, /refreshMinutes/);
-  assert.match(source, /url\.search\s*=\s*["']["']/);
-  assert.match(source, /url\.hash\s*=\s*["']["']/);
+  assert.match(bindingsSource, /url\.search\s*=\s*["']["']/);
+  assert.match(bindingsSource, /url\.hash\s*=\s*["']["']/);
   assert.doesNotMatch(source, /\/user\/profile\/[0-9a-f]{20,}/i);
 });

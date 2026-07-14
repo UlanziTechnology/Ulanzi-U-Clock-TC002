@@ -7,19 +7,27 @@
     <style>
       body { font: 14px system-ui; max-width: 680px; margin: 32px auto; padding: 0 20px; color: #202124; }
       label { display: block; font-weight: 600; margin-top: 18px; }
-      input, textarea { box-sizing: border-box; width: 100%; margin-top: 6px; padding: 9px; }
-      textarea { min-height: 110px; resize: vertical; }
+      input { box-sizing: border-box; width: 100%; margin-top: 6px; padding: 9px; }
       button { margin-top: 20px; padding: 9px 18px; }
+      .binding { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; align-items: end; margin-top: 12px; }
+      .binding label { margin-top: 0; }
+      .binding button { margin: 0 0 1px; }
+      #addBinding { margin-top: 12px; }
       #status { margin-left: 12px; }
       .hint { color: #5f6368; font-size: 12px; }
+      .warning { color: #b06000; }
+      @media (max-width: 620px) { .binding { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
     <h1>TC002 小红书粉丝数</h1>
     <p>这些设置只保存在当前电脑的 Chrome 中。页面数据只会发送到本机 127.0.0.1，不会上传到第三方服务。</p>
 
-    <label for="profileUrls">小红书用户主页 URL（每行一个）</label>
-    <textarea id="profileUrls" placeholder="https://www.xiaohongshu.com/user/profile/..."></textarea>
+    <h2>设备与主页绑定</h2>
+    <p class="hint">每台 TC002 绑定一个小红书主页。请填写 TC002 设备 IP；设备和电脑需能通过同一局域网互相访问。</p>
+    <div id="bindings"></div>
+    <button id="addBinding" type="button">添加设备</button>
+    <p id="bindingWarning" class="hint warning"></p>
 
     <label for="refreshSeconds">刷新间隔（秒，最少 5）</label>
     <input id="refreshSeconds" type="number" min="5" step="1" value="30">
