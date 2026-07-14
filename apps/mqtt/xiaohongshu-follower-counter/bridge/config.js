@@ -6,7 +6,7 @@ export function loadConfig(env = process.env) {
   const tls = parseBoolean(env.MQTT_TLS, false);
   const port = parsePort(env.MQTT_PORT, tls ? 8883 : 1883, "MQTT_PORT");
   const bridgePort = parsePort(env.XHS_BRIDGE_PORT, 17321, "XHS_BRIDGE_PORT");
-  const topic = env.TC002_MQTT_TOPIC || "ulanzi_1bf6/custom/xhs_followers";
+  const topic = required(env.TC002_MQTT_TOPIC, "TC002_MQTT_TOPIC");
 
   return {
     token,
@@ -23,6 +23,16 @@ export function loadConfig(env = process.env) {
       timeoutMs: 5000,
       retain: true,
     },
+  };
+}
+
+export function configSummary(config) {
+  return {
+    bridge: `http://127.0.0.1:${config.bridgePort}`,
+    mqttHost: config.mqtt.host,
+    mqttPort: config.mqtt.port,
+    mqttTls: config.mqtt.tls,
+    topic: config.topic,
   };
 }
 

@@ -3,7 +3,7 @@ import http from "node:http";
 import { timingSafeEqual } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
-import { loadConfig } from "./config.js";
+import { configSummary, loadConfig } from "./config.js";
 import { publishMqtt } from "./mqtt.js";
 import { buildCustomAppPayload } from "./render.js";
 
@@ -134,7 +134,7 @@ async function main() {
   const config = loadConfig();
   const server = createBridgeServer(config);
   server.listen(config.bridgePort, "127.0.0.1", () => {
-    console.log(`TC002 Xiaohongshu bridge listening on http://127.0.0.1:${config.bridgePort}`);
+    console.log(`TC002 Xiaohongshu bridge ready ${JSON.stringify(configSummary(config))}`);
   });
 }
 
