@@ -6,7 +6,21 @@ import * as bridgeConfig from "../bridge/config.js";
 
 const { loadConfig } = bridgeConfig;
 
-test("loadConfig derives deployment values from the current environment", () => {
+test("loadConfig starts portably with only the local shared token", () => {
+  const config = loadConfig({ XHS_BRIDGE_TOKEN: "machine-generated-token" });
+  assert.equal(config.token, "machine-generated-token");
+  assert.equal(config.bridgePort, 17321);
+  assert.equal(config.legacyTarget, null);
+  assert.deepEqual(config.mqttPolicy, {
+    tls: false,
+    rejectUnauthorized: true,
+    clientId: undefined,
+    timeoutMs: 5000,
+    retain: true,
+  });
+});
+
+test("loadConfig keeps a complete explicit legacy target for one release", () => {
   const config = loadConfig({
     XHS_BRIDGE_TOKEN: "machine-generated-token",
     XHS_BRIDGE_PORT: "18432",
@@ -17,67 +31,47 @@ test("loadConfig derives deployment values from the current environment", () => 
     MQTT_TLS: "true",
     MQTT_ALLOW_SELF_SIGNED: "true",
     MQTT_CLIENT_ID: "desktop-a",
-    TC002_MQTT_TOPIC: "device/current/custom/xhs",
+    TC002_MQTT_TOPIC: "ulanzi_1bd9/custom/display",
   });
 
-  assert.equal(config.token, "machine-generated-token");
   assert.equal(config.bridgePort, 18432);
-  assert.equal(config.topic, "device/current/custom/xhs");
-  assert.deepEqual(config.mqtt, {
+  assert.equal(config.legacyTarget.topic, "ulanzi_1bd9/custom/display");
+  assert.deepEqual(config.legacyTarget.mqtt, {
     host: "broker.lan",
     port: 2883,
-    tls: true,
     username: "clock-user",
     password: "clock-password",
-    rejectUnauthorized: false,
-    clientId: "desktop-a",
-    timeoutMs: 5000,
-    retain: true,
   });
+  assert.equal(config.mqttPolicy.tls, true);
+  assert.equal(config.mqttPolicy.rejectUnauthorized, false);
+  assert.equal(config.mqttPolicy.clientId, "desktop-a");
 });
 
-test("loadConfig requires a per-device MQTT topic", () => {
+test("loadConfig rejects partial legacy targets", () => {
   assert.throws(
-    () => loadConfig({
-      XHS_BRIDGE_TOKEN: "machine-generated-token",
-      MQTT_HOST: "broker.lan",
-    }),
-    /TC002_MQTT_TOPIC is required/,
+    () => loadConfig({ XHS_BRIDGE_TOKEN: "token", MQTT_HOST: "broker.lan" }),
+    /MQTT_HOST and TC002_MQTT_TOPIC/,
+  );
+  assert.throws(
+    () => loadConfig({ XHS_BRIDGE_TOKEN: "token", TC002_MQTT_TOPIC: "ulanzi_1bd9\/custom\/display" }),
+    /MQTT_HOST and TC002_MQTT_TOPIC/,
   );
 });
 
-test("loadConfig still provides portable protocol defaults", () => {
-  const config = loadConfig({
-    XHS_BRIDGE_TOKEN: "machine-generated-token",
-    MQTT_HOST: "broker.lan",
-    TC002_MQTT_TOPIC: "device/current/custom/xhs",
-  });
-
-  assert.equal(config.bridgePort, 17321);
-  assert.equal(config.mqtt.port, 1883);
-  assert.equal(config.mqtt.tls, false);
-  assert.equal(config.mqtt.clientId, undefined);
-});
-
-test("configSummary reports connection targets without secrets", () => {
-  assert.equal(typeof bridgeConfig.configSummary, "function");
+test("configSummary reports policy without targets or secrets", () => {
   const config = loadConfig({
     XHS_BRIDGE_TOKEN: "never-log-this-token",
     MQTT_HOST: "broker.lan",
     MQTT_USERNAME: "private-user",
     MQTT_PASSWORD: "never-log-this-password",
     MQTT_TLS: "true",
-    TC002_MQTT_TOPIC: "device/current/custom/xhs",
+    TC002_MQTT_TOPIC: "ulanzi_1bd9/custom/display",
   });
-
   const summary = bridgeConfig.configSummary(config);
   assert.deepEqual(summary, {
     bridge: "http://127.0.0.1:17321",
-    mqttHost: "broker.lan",
-    mqttPort: 8883,
     mqttTls: true,
-    topic: "device/current/custom/xhs",
+    legacyFallback: true,
   });
-  const serialized = JSON.stringify(summary);
-  assert.doesNotMatch(serialized, /never-log|private-user/);
+  assert.doesNotMatch(JSON.stringify(summary), /never-log|private-user|broker\.lan|1bd9/);
 });

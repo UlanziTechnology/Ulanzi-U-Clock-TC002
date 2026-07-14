@@ -2,37 +2,44 @@
 
 export function loadConfig(env = process.env) {
   const token = required(env.XHS_BRIDGE_TOKEN, "XHS_BRIDGE_TOKEN");
-  const host = required(env.MQTT_HOST, "MQTT_HOST");
   const tls = parseBoolean(env.MQTT_TLS, false);
-  const port = parsePort(env.MQTT_PORT, tls ? 8883 : 1883, "MQTT_PORT");
   const bridgePort = parsePort(env.XHS_BRIDGE_PORT, 17321, "XHS_BRIDGE_PORT");
-  const topic = required(env.TC002_MQTT_TOPIC, "TC002_MQTT_TOPIC");
+  const host = env.MQTT_HOST?.trim();
+  const topic = env.TC002_MQTT_TOPIC?.trim();
+  if (Boolean(host) !== Boolean(topic)) {
+    throw new Error("MQTT_HOST and TC002_MQTT_TOPIC must be configured together");
+  }
+
+  const mqttPolicy = {
+    tls,
+    rejectUnauthorized: !parseBoolean(env.MQTT_ALLOW_SELF_SIGNED, false),
+    clientId: env.MQTT_CLIENT_ID || undefined,
+    timeoutMs: 5000,
+    retain: true,
+  };
+  const legacyTarget = host && topic ? {
+    topic,
+    mqtt: {
+      host,
+      port: parsePort(env.MQTT_PORT, tls ? 8883 : 1883, "MQTT_PORT"),
+      username: env.MQTT_USERNAME || undefined,
+      password: env.MQTT_PASSWORD || undefined,
+    },
+  } : null;
 
   return {
     token,
     bridgePort,
-    topic,
-    mqtt: {
-      host,
-      port,
-      tls,
-      username: env.MQTT_USERNAME || undefined,
-      password: env.MQTT_PASSWORD || undefined,
-      rejectUnauthorized: !parseBoolean(env.MQTT_ALLOW_SELF_SIGNED, false),
-      clientId: env.MQTT_CLIENT_ID || undefined,
-      timeoutMs: 5000,
-      retain: true,
-    },
+    mqttPolicy,
+    legacyTarget,
   };
 }
 
 export function configSummary(config) {
   return {
     bridge: `http://127.0.0.1:${config.bridgePort}`,
-    mqttHost: config.mqtt.host,
-    mqttPort: config.mqtt.port,
-    mqttTls: config.mqtt.tls,
-    topic: config.topic,
+    mqttTls: config.mqttPolicy.tls,
+    legacyFallback: Boolean(config.legacyTarget),
   };
 }
 

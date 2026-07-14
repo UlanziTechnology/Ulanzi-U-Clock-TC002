@@ -4,12 +4,13 @@ import { timingSafeEqual } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
 import { configSummary, loadConfig } from "./config.js";
+import { createDeviceResolver } from "./device-discovery.js";
 import { publishMqtt } from "./mqtt.js";
 import { buildCustomAppPayload } from "./render.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 
-export function validateSnapshot(input) {
+export function validateSnapshot(input, { allowMissingDeviceIp = false } = {}) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new TypeError("Event must be a JSON object");
   }
@@ -39,15 +40,21 @@ export function validateSnapshot(input) {
   const displayName = typeof input.displayName === "string" && input.displayName.trim()
     ? input.displayName.trim().slice(0, 80)
     : "小红书用户";
+  const deviceIp = input.deviceIp === undefined && allowMissingDeviceIp
+    ? undefined
+    : normalizePrivateIpv4(input.deviceIp);
   return {
     profileUrl: url.toString(),
     displayName,
     followerCount: input.followerCount,
     observedAt: new Date(observedAt).toISOString(),
+    ...(deviceIp ? { deviceIp } : {}),
   };
 }
 
-export function createBridgeServer(config, publish = publishMqtt) {
+export function createBridgeServer(config, publish = publishMqtt, options = {}) {
+  const resolver = options.resolveDevice ? null : createDeviceResolver(options.deviceResolverOptions);
+  const resolveDevice = options.resolveDevice || resolver.resolve;
   return http.createServer(async (request, response) => {
     applyCors(request, response);
     try {
@@ -65,21 +72,53 @@ export function createBridgeServer(config, publish = publishMqtt) {
         return sendJson(response, 401, { error: "unauthorized" });
       }
 
-      const snapshot = validateSnapshot(JSON.parse(await readBody(request)));
+      const snapshot = validateSnapshot(JSON.parse(await readBody(request)), {
+        allowMissingDeviceIp: Boolean(config.legacyTarget),
+      });
       const payload = JSON.stringify(buildCustomAppPayload(snapshot));
-      await publish(config.mqtt, config.topic, payload);
+      let target;
+      if (snapshot.deviceIp) {
+        target = await resolveDevice(snapshot.deviceIp);
+        try {
+          await publish({ ...config.mqttPolicy, ...target.mqtt }, target.topic, payload);
+        } catch {
+          target = await resolveDevice(snapshot.deviceIp, { forceRefresh: true });
+          await publish({ ...config.mqttPolicy, ...target.mqtt }, target.topic, payload);
+        }
+      } else {
+        target = config.legacyTarget;
+        await publish({ ...config.mqttPolicy, ...target.mqtt }, target.topic, payload);
+      }
       return sendJson(response, 200, {
         published: true,
-        topic: config.topic,
+        deviceIp: target.deviceIp || snapshot.deviceIp || null,
+        topic: target.topic,
         followerCount: snapshot.followerCount,
       });
     } catch (error) {
       const clientError = error instanceof SyntaxError || error instanceof TypeError || error?.code === "BODY_TOO_LARGE";
-      return sendJson(response, clientError ? 400 : 502, {
-        error: clientError ? error.message : "mqtt_publish_failed",
-      });
+      if (clientError) return sendJson(response, 400, { error: error.message });
+      if (["invalid_device_response", "invalid_mqtt_config", "mqtt_disabled"].includes(error?.code)) {
+        return sendJson(response, 400, { error: error.code });
+      }
+      if (error?.code === "device_unreachable") return sendJson(response, 502, { error: error.code });
+      return sendJson(response, 502, { error: "mqtt_publish_failed" });
     }
   });
+}
+
+function normalizePrivateIpv4(value) {
+  const input = String(value ?? "").trim();
+  const parts = input.split(".");
+  if (parts.length !== 4 || parts.some((part) => !/^\d{1,3}$/.test(part) || Number(part) > 255)) {
+    throw new TypeError("deviceIp must be an RFC1918 IPv4 address");
+  }
+  const octets = parts.map(Number);
+  const isPrivate = octets[0] === 10 ||
+    (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+    (octets[0] === 192 && octets[1] === 168);
+  if (!isPrivate) throw new TypeError("deviceIp must be an RFC1918 IPv4 address");
+  return octets.join(".");
 }
 
 function authorized(header, token) {

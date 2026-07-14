@@ -6,8 +6,8 @@ import { createBridgeServer, validateSnapshot } from "../bridge/server.js";
 
 const CONFIG = {
   token: "test-token-123456",
-  topic: "ulanzi_1bf6/custom/xhs_followers",
-  mqtt: { host: "127.0.0.1", port: 1883 },
+  mqttPolicy: { timeoutMs: 5000, retain: true, tls: false },
+  legacyTarget: null,
 };
 
 test("validateSnapshot accepts only Xiaohongshu profile events", () => {
@@ -17,6 +17,7 @@ test("validateSnapshot accepts only Xiaohongshu profile events", () => {
       displayName: " Momo ",
       followerCount: 123,
       observedAt: "2026-07-14T12:00:00.000Z",
+      deviceIp: "10.10.21.210",
       ignored: "not forwarded",
     }),
     {
@@ -24,6 +25,7 @@ test("validateSnapshot accepts only Xiaohongshu profile events", () => {
       displayName: "Momo",
       followerCount: 123,
       observedAt: "2026-07-14T12:00:00.000Z",
+      deviceIp: "10.10.21.210",
     },
   );
   assert.throws(
@@ -69,21 +71,71 @@ test("bridge rejects missing authorization and invalid events", async () => {
 
 test("bridge renders and publishes a retained custom app payload", async () => {
   const calls = [];
+  const resolved = [];
+  const resolveDevice = async (deviceIp, options) => {
+    resolved.push({ deviceIp, options });
+    return {
+      deviceIp,
+      topic: "ulanzi_1bd9/custom/display",
+      mqtt: { host: "10.10.20.159", port: 1883 },
+    };
+  };
   await withServer(async (baseUrl) => {
     const response = await post(baseUrl, validEvent());
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       published: true,
-      topic: CONFIG.topic,
+      deviceIp: "10.10.21.210",
+      topic: "ulanzi_1bd9/custom/display",
       followerCount: 12345,
     });
-  }, async (...args) => calls.push(args));
+  }, async (...args) => calls.push(args), { resolveDevice });
 
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0].slice(0, 2), [CONFIG.mqtt, CONFIG.topic]);
+  assert.equal(calls[0][0].host, "10.10.20.159");
+  assert.equal(calls[0][0].retain, true);
+  assert.equal(calls[0][1], "ulanzi_1bd9/custom/display");
+  assert.deepEqual(resolved, [{ deviceIp: "10.10.21.210", options: undefined }]);
   const payload = JSON.parse(calls[0][2]);
   assert.equal(payload.duration, 31536000);
   assert.match(payload.image[0].data, /^data:image\/png;base64,/);
+});
+
+test("bridge refreshes discovery once after a publish failure", async () => {
+  const resolutions = [];
+  let publishes = 0;
+  const resolveDevice = async (deviceIp, options) => {
+    resolutions.push({ deviceIp, options });
+    return { deviceIp, topic: "ulanzi_1bd9/custom/display", mqtt: { host: "10.10.20.159", port: 1883 } };
+  };
+  await withServer(async (baseUrl) => {
+    const response = await post(baseUrl, validEvent());
+    assert.equal(response.status, 200);
+  }, async () => {
+    publishes += 1;
+    if (publishes === 1) throw new Error("stale broker");
+  }, { resolveDevice });
+  assert.equal(publishes, 2);
+  assert.deepEqual(resolutions, [
+    { deviceIp: "10.10.21.210", options: undefined },
+    { deviceIp: "10.10.21.210", options: { forceRefresh: true } },
+  ]);
+});
+
+test("one device discovery failure does not affect another device", async () => {
+  const resolveDevice = async (deviceIp) => {
+    if (deviceIp === "10.10.21.211") throw Object.assign(new Error("offline"), { code: "device_unreachable" });
+    return { deviceIp, topic: "ulanzi_1bd9/custom/display", mqtt: { host: "10.10.20.159", port: 1883 } };
+  };
+  await withServer(async (baseUrl) => {
+    const [failed, succeeded] = await Promise.all([
+      post(baseUrl, { ...validEvent(), deviceIp: "10.10.21.211" }),
+      post(baseUrl, validEvent()),
+    ]);
+    assert.equal(failed.status, 502);
+    assert.deepEqual(await failed.json(), { error: "device_unreachable" });
+    assert.equal(succeeded.status, 200);
+  }, async () => {}, { resolveDevice });
 });
 
 function validEvent() {
@@ -92,6 +144,7 @@ function validEvent() {
     displayName: "Momo",
     followerCount: 12345,
     observedAt: "2026-07-14T12:00:00.000Z",
+    deviceIp: "10.10.21.210",
   };
 }
 
@@ -107,8 +160,8 @@ function post(baseUrl, body) {
   });
 }
 
-async function withServer(run, publish = async () => {}) {
-  const server = createBridgeServer(CONFIG, publish);
+async function withServer(run, publish = async () => {}, options = {}) {
+  const server = createBridgeServer(CONFIG, publish, options);
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", resolve);

@@ -10,6 +10,7 @@ const DEFAULTS = {
   lastResults: {},
 };
 let refreshInProgress = false;
+let resultWriteQueue = Promise.resolve();
 
 chrome.runtime.onInstalled.addListener(async () => {
   const bindings = await migrateBindings(chrome.storage.local);
@@ -88,16 +89,14 @@ async function handleSnapshot(input, sender) {
       config.bridgeToken,
       { ...snapshot, deviceIp },
     )));
-    const lastResults = { ...config.lastResults };
+    const updates = {};
     settled.forEach((result, index) => {
       const { deviceIp } = targets[index];
-      lastResults[deviceIp] = result.status === "fulfilled"
+      updates[deviceIp] = result.status === "fulfilled"
         ? { ok: true, displayName: snapshot.displayName, followerCount: snapshot.followerCount, observedAt: snapshot.observedAt }
         : { ok: false, error: String(result.reason?.message || result.reason).slice(0, 160), observedAt: new Date().toISOString() };
     });
-    await chrome.storage.local.set({
-      lastResults,
-    });
+    await mergeLastResults(updates);
     if (settled.every((result) => result.status === "rejected")) throw settled[0].reason;
   } catch (error) {
     throw error;
@@ -107,7 +106,6 @@ async function handleSnapshot(input, sender) {
 }
 
 async function handleExtractError(error, sender) {
-  const config = await chrome.storage.local.get(DEFAULTS);
   let profileUrl = null;
   try {
     profileUrl = canonicalProfileUrl(sender.tab?.url || "");
@@ -115,16 +113,24 @@ async function handleExtractError(error, sender) {
     // The tab may already have navigated away from the configured profile.
   }
   const bindings = await migrateBindings(chrome.storage.local);
-  const lastResults = { ...config.lastResults };
+  const updates = {};
   for (const binding of bindings.filter((item) => item.profileUrl === profileUrl && item.deviceIp)) {
-    lastResults[binding.deviceIp] = {
+    updates[binding.deviceIp] = {
       ok: false,
       error: String(error || "extract_failed").slice(0, 160),
       observedAt: new Date().toISOString(),
     };
   }
-  await chrome.storage.local.set({ lastResults });
+  await mergeLastResults(updates);
   if (sender.tab?.id !== undefined) await closeManaged(sender.tab.id);
+}
+
+function mergeLastResults(updates) {
+  resultWriteQueue = resultWriteQueue.catch(() => {}).then(async () => {
+    const { lastResults = {} } = await chrome.storage.local.get("lastResults");
+    await chrome.storage.local.set({ lastResults: { ...lastResults, ...updates } });
+  });
+  return resultWriteQueue;
 }
 
 function sanitizeSnapshot(input) {

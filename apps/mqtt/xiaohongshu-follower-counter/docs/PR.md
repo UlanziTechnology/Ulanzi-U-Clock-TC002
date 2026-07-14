@@ -8,9 +8,9 @@ feat(mqtt/xiaohongshu-follower-counter): 添加本地小红书粉丝数显示
 
 ## 描述
 
-新增一个 Chrome Manifest V3 扩展和零第三方运行时依赖的 Node.js Bridge。扩展使用用户当前 Chrome 会话读取配置主页上已显示的粉丝数，只把规范化后的主页 URL、昵称、计数和时间发送到 `127.0.0.1`。Bridge 生成 52×16 PNG，并发布到用户运行时配置的 MQTT broker 和 TC002 Custom App topic。
+新增一个 Chrome Manifest V3 扩展和零第三方运行时依赖的 Node.js Bridge。扩展使用用户当前 Chrome 会话读取配置主页上已显示的粉丝数，只把绑定设备 IP、规范化主页 URL、昵称、计数和时间发送到 `127.0.0.1`。Bridge 读取 TC002 的 `/getBase` 与 `/getMqttConfig`，生成 52×16 PNG，并发布到 `[prefix]_[mac4]/custom/display`。
 
-所有电脑、账号、网络和设备参数均来自 `chrome.storage.local` 或当前进程环境变量；源码中没有开发机路径、固定主页、固定 broker、凭证或设备 topic。
+每台设备在扩展中绑定一个主页；发现结果缓存 5 分钟，单台设备失败不影响其他设备。源码中没有开发机路径、固定主页、固定 broker、凭证或设备 topic。
 
 ## 权限与隐私
 

@@ -41,6 +41,7 @@ test("service worker schedules second-based refreshes without overlapping batche
   assert.match(source, /deviceIp/);
   assert.match(source, /lastResults/);
   assert.match(source, /Promise\.allSettled/);
+  assert.match(source, /resultWriteQueue/);
   assert.match(source, /profile_not_configured/);
   assert.doesNotMatch(source, /cookie/i);
   assert.match(source, /chrome\.storage\.local\.get\(DEFAULTS\)/);

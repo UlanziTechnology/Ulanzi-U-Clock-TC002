@@ -16,11 +16,12 @@ test("package and Chrome extension publish the same version", async () => {
   assert.equal(packageJson.version, manifest.version);
 });
 
-test("environment template exposes every machine-specific bridge value", async () => {
+test("environment template keeps normal startup portable and labels legacy values", async () => {
   const example = await readFile(new URL(".env.example", APP), "utf8");
+  for (const name of ["XHS_BRIDGE_TOKEN", "XHS_BRIDGE_PORT"]) {
+    assert.match(example, new RegExp(`^${name}=`, "m"), `.env.example should expose ${name}`);
+  }
   for (const name of [
-    "XHS_BRIDGE_TOKEN",
-    "XHS_BRIDGE_PORT",
     "MQTT_HOST",
     "MQTT_PORT",
     "MQTT_USERNAME",
@@ -30,9 +31,10 @@ test("environment template exposes every machine-specific bridge value", async (
     "MQTT_CLIENT_ID",
     "TC002_MQTT_TOPIC",
   ]) {
-    assert.match(example, new RegExp(`^${name}=`, "m"), `.env.example should expose ${name}`);
+    assert.match(example, new RegExp(`^# ${name}=`, "m"), `.env.example should label legacy ${name}`);
   }
-  assert.match(example, /replace-with-your-tc002-custom-app-topic/);
+  assert.match(example, /legacy fallback/i);
+  assert.match(example, /custom\/display/);
 });
 
 test("repository ignores local operating-system and runtime files", async () => {

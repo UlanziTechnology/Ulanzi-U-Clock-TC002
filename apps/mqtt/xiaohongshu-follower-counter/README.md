@@ -1,18 +1,18 @@
 # TC002 小红书粉丝数（纯本地）
 
-Chrome 使用当前电脑的登录会话读取配置主页上已经显示的粉丝数，本地 Node.js Bridge 将其渲染为 52×16 图片并发布到用户配置的 TC002 MQTT Custom App topic。没有第三方采集云服务，也不读取或导出 Cookie。
+Chrome 使用当前电脑的登录会话读取配置主页上已经显示的粉丝数，本地 Node.js Bridge 从绑定的 TC002 动态发现 MQTT 配置，将计数渲染为 52×16 图片并发布到设备原生 DIY topic。没有第三方采集云服务，也不读取或导出 Cookie。
 
 ```text
-Chrome → 127.0.0.1 Bridge → MQTT broker → TC002
+Chrome（设备 IP + 主页）→ 127.0.0.1 Bridge → TC002 配置的 MQTT broker → custom/display
 ```
 
 ## 快速开始
 
 1. 安装 Node.js 20 或更高版本。
-2. 参考 [`.env.example`](.env.example) 在当前电脑设置 Bridge 和 MQTT 环境变量。
+2. 设置随机 `XHS_BRIDGE_TOKEN`；可参考 [`.env.example`](.env.example)。
 3. 运行 `npm run check`，然后运行 `npm start`。
 4. 在 `chrome://extensions` 加载 [`extension/`](extension/) 目录。
-5. 在扩展设置页填写主页 URL、Bridge URL 和当前电脑共享令牌。
+5. 在扩展设置页为每台 TC002 填写设备 IP、绑定主页、Bridge URL 和当前电脑共享令牌。
 
 完整安装、Windows/macOS/Linux 配置、接口、隐私和故障排查见 [docs/README.md](docs/README.md)。
 
