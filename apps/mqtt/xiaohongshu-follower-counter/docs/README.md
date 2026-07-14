@@ -1,65 +1,110 @@
 # TC002 小红书粉丝数（纯本地）
 
-## 简介
+## 实现方式
 
-这个应用把任意已配置的小红书用户主页粉丝数显示到 TC002：
+这个应用使用当前电脑上的 Chrome 会话读取用户已经能够访问的小红书主页，并把页面显示的粉丝数发送到 TC002：
 
 ```text
-Chrome 登录后访问用户主页
-  → MV3 扩展读取页面中已经展示的粉丝数
-  → http://127.0.0.1:17321 本地桥接
-  → MQTT broker
-  → TC002 Custom App 52×16 图片
+Chrome MV3 扩展
+  → 页面内嵌 JSON / 可见“粉丝”DOM
+  → http://127.0.0.1:<可配置端口>
+  → Node.js Bridge 生成 52×16 PNG
+  → 用户配置的 MQTT broker/topic
+  → TC002 Custom App
 ```
 
-扩展不读取 Cookie、不申请 `cookies`/`webRequest` 权限、不导出登录态，也不绕过验证码或访问限制。页面 URL、昵称、粉丝数和采集时间只发送到本机回环地址。
+扩展不读取 Cookie，不申请 `cookies`、`webRequest` 或 `<all_urls>` 权限，不导出登录态，也不绕过验证码或访问限制。发送给 Bridge 的字段只有主页 URL、昵称、粉丝数和采集时间。
 
-![52×16 显示预览](../preview/demo.png)
+![52×16 渲染预览](../preview/demo.png)
 
-## 依赖
+> `demo.png` 是软件渲染预览，不是真机照片。向上游正式提交前需要按 [preview/README.md](../preview/README.md) 补充真实 TC002 照片或 GIF。
 
-- Node.js 20 或更高版本
-- Chrome 或兼容 Manifest V3 的 Chromium 浏览器
-- TC002 可访问的 MQTT broker
-- 已能订阅 Custom App topic 的 TC002 固件
+## 动态配置与支持环境
 
-运行时没有 npm 第三方依赖；桥接内置了所需的 PNG 编码和 MQTT 3.1.1 客户端。
+应用不包含开发电脑专属参数。每台电脑分别配置：
 
-## 1. 启动本地桥接
+- 小红书主页列表、刷新周期、Bridge URL 和令牌保存在当前电脑的 `chrome.storage.local`；
+- MQTT 地址、端口、凭证、TLS、client ID 和 TC002 topic 从当前 Bridge 进程环境变量读取；
+- 代码不依赖绝对路径或固定 Chrome 扩展 ID。
 
-进入应用目录：
+支持 Node.js 20+ 以及能够运行 Manifest V3 扩展的 Chrome/Chromium，目标系统为 Windows、macOS 和 Linux。Bridge 没有 npm 第三方运行时依赖。
+
+## 1. 获取代码和检查环境
+
+从仓库根目录进入应用：
+
+```text
+apps/mqtt/xiaohongshu-follower-counter
+```
+
+检查 Node.js：
 
 ```bash
-cd apps/mqtt/xiaohongshu-follower-counter
+node --version
+npm run check
 ```
 
-生成一个本地共享令牌：
+`npm run check` 会运行测试、JavaScript 语法检查、扩展版本检查和待提交文件安全扫描。
+只运行自动测试时可使用 `npm test`。
+
+## 2. 配置并启动 Bridge
+
+[`.env.example`](../.env.example) 列出了全部配置项，但程序不会自动读取 `.env`，因此不会引入额外依赖。请在每台电脑的终端或进程管理器中设置环境变量，不要修改源代码，也不要提交真实令牌。
+
+用 Node.js 生成本机共享令牌：
 
 ```bash
-openssl rand -hex 24
+node -e "console.log(require('node:crypto').randomBytes(24).toString('hex'))"
 ```
 
-设置环境变量并启动：
+### macOS / Linux（POSIX shell）
 
 ```bash
 export XHS_BRIDGE_TOKEN="粘贴刚生成的令牌"
+export XHS_BRIDGE_PORT="17321"
 export MQTT_HOST="192.168.1.10"
 export MQTT_PORT="1883"
-export TC002_MQTT_TOPIC="ulanzi_1bf6/custom/xhs_followers"
+export MQTT_USERNAME=""
+export MQTT_PASSWORD=""
+export MQTT_TLS="false"
+export MQTT_ALLOW_SELF_SIGNED="false"
+export MQTT_CLIENT_ID=""
+export TC002_MQTT_TOPIC="替换为当前设备的-custom-app-topic"
 npm start
 ```
 
-可选参数：
+### Windows PowerShell
 
-| 环境变量 | 默认值 | 说明 |
-|---|---:|---|
-| `XHS_BRIDGE_PORT` | `17321` | 本地 HTTP 端口；始终只监听 `127.0.0.1` |
-| `MQTT_USERNAME` | 空 | broker 用户名 |
-| `MQTT_PASSWORD` | 空 | broker 密码；必须同时设置用户名 |
-| `MQTT_TLS` | `false` | `true` 时使用 TLS，默认端口变为 8883 |
-| `MQTT_ALLOW_SELF_SIGNED` | `false` | 仅在自签名局域网 broker 上按需启用 |
-| `MQTT_CLIENT_ID` | 自动生成 | 固定 MQTT client id |
-| `TC002_MQTT_TOPIC` | `ulanzi_1bf6/custom/xhs_followers` | TC002 Custom App topic |
+```powershell
+$env:XHS_BRIDGE_TOKEN = "粘贴刚生成的令牌"
+$env:XHS_BRIDGE_PORT = "17321"
+$env:MQTT_HOST = "192.168.1.10"
+$env:MQTT_PORT = "1883"
+$env:MQTT_USERNAME = ""
+$env:MQTT_PASSWORD = ""
+$env:MQTT_TLS = "false"
+$env:MQTT_ALLOW_SELF_SIGNED = "false"
+$env:MQTT_CLIENT_ID = ""
+$env:TC002_MQTT_TOPIC = "替换为当前设备的-custom-app-topic"
+npm start
+```
+
+配置说明：
+
+| 环境变量 | 必填 | 默认值 | 说明 |
+|---|:---:|---:|---|
+| `XHS_BRIDGE_TOKEN` | 是 | 无 | 当前电脑扩展与 Bridge 共用的随机令牌 |
+| `XHS_BRIDGE_PORT` | 否 | `17321` | loopback HTTP 端口 |
+| `MQTT_HOST` | 是 | 无 | 当前电脑可访问的 MQTT broker |
+| `MQTT_PORT` | 否 | `1883`/`8883` | TCP/TLS 端口 |
+| `MQTT_USERNAME` | 否 | 空 | broker 用户名 |
+| `MQTT_PASSWORD` | 否 | 空 | broker 密码；使用时同时配置用户名 |
+| `MQTT_TLS` | 否 | `false` | `true` 时使用 TLS |
+| `MQTT_ALLOW_SELF_SIGNED` | 否 | `false` | 仅用于可信局域网自签名证书 |
+| `MQTT_CLIENT_ID` | 否 | 动态生成 | 需要固定 client ID 时设置 |
+| `TC002_MQTT_TOPIC` | 是 | 无 | 当前 TC002 Custom App topic，不使用示例固定值 |
+
+Bridge 始终只监听 IPv4 loopback `127.0.0.1`，即使更换电脑也是相同的本机安全边界。端口可以通过 `XHS_BRIDGE_PORT` 修改。
 
 健康检查：
 
@@ -67,48 +112,46 @@ npm start
 curl http://127.0.0.1:17321/health
 ```
 
-应返回 `{"ok":true}`。
-
-## 2. 安装 Chrome 扩展
-
-1. 在 Chrome 地址栏打开 `chrome://extensions`。
-2. 打开右上角“开发者模式”。
-3. 点击“加载已解压的扩展程序”。
-4. 选择本应用的 `extension/` 目录。
-5. 扩展会自动打开设置页。
-
-在设置页填写：
-
-- 一个或多个完整小红书用户主页 URL，每行一个；
-- 刷新间隔，最低 5 分钟；
-- `http://127.0.0.1:17321`；
-- 与 `XHS_BRIDGE_TOKEN` 完全一致的共享令牌。
-
-保存后扩展会在非活动标签页依次打开这些主页。若小红书要求登录或验证，请在同一个 Chrome 用户配置中手动完成，然后等待下一次刷新。
-
-## 3. 手工测试桥接到 TC002
-
-在不加载扩展的情况下也可以验证 HTTP→MQTT→TC002：
-
-```bash
-curl -X POST http://127.0.0.1:17321/v1/follower-count \
-  -H "Authorization: Bearer $XHS_BRIDGE_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "profileUrl":"https://www.xiaohongshu.com/user/profile/demo",
-    "displayName":"Demo",
-    "followerCount":12800,
-    "observedAt":"2026-07-14T12:00:00.000Z"
-  }'
-```
-
-成功时返回：
+应返回：
 
 ```json
-{"published":true,"topic":"ulanzi_1bf6/custom/xhs_followers","followerCount":12800}
+{"ok":true}
 ```
 
-桥接发布的 MQTT payload 与仓库其他 Custom App 保持一致：
+## 3. 安装和配置 Chrome 扩展
+
+1. 打开 `chrome://extensions`。
+2. 开启“开发者模式”。
+3. 点击“加载已解压的扩展程序”。
+4. 选择本应用的 `extension/` 目录。
+5. 在自动打开的设置页填写一个或多个完整小红书用户主页 URL。
+6. 填写刷新间隔、当前电脑 Bridge URL，以及与 `XHS_BRIDGE_TOKEN` 一致的令牌。
+7. 保存后观察“最近结果”。
+
+主页 URL 保存时会移除 query 和 hash，避免持久化临时 `xsec_token`。刷新间隔最低为 5 分钟，建议使用 15–60 分钟，减少触发登录验证或限流的概率。
+
+## 4. 数据与 MQTT 格式
+
+扩展调用：
+
+```http
+POST /v1/follower-count
+Authorization: Bearer <当前电脑共享令牌>
+Content-Type: application/json
+```
+
+```json
+{
+  "profileUrl": "https://www.xiaohongshu.com/user/profile/<profile-id>",
+  "displayName": "示例用户",
+  "followerCount": 116000,
+  "observedAt": "2026-07-14T12:00:00.000Z"
+}
+```
+
+页面显示 `11.6万` 时会标准化为 `116000`，这是页面公开的约数，不代表平台内部精确到个位的粉丝数。
+
+Bridge 发布 retained QoS 0 MQTT 消息：
 
 ```json
 {
@@ -119,45 +162,54 @@ curl -X POST http://127.0.0.1:17321/v1/follower-count \
 }
 ```
 
-## 测试
+topic 完全来自当前电脑的 `TC002_MQTT_TOPIC`，源码中没有绑定某台设备。
+
+## 5. 手工分段验证
+
+先验证 Bridge 到 MQTT：
 
 ```bash
-npm test
-npm run preview
+curl -X POST http://127.0.0.1:17321/v1/follower-count \
+  -H "Authorization: Bearer $XHS_BRIDGE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"profileUrl":"https://www.xiaohongshu.com/user/profile/demo","displayName":"Demo","followerCount":12800,"observedAt":"2026-07-14T12:00:00.000Z"}'
 ```
 
-测试覆盖数字单位换算、JSON/DOM 采集、PNG 52×16、MQTT packet、真实 loopback socket、HTTP 鉴权和扩展权限契约。
+Windows PowerShell 可使用 `Invoke-RestMethod` 发送相同 JSON。成功响应包含 `published: true`、当前 topic 和 `followerCount`。
+
+再加载扩展并配置一个当前 Chrome 能正常打开的主页。扩展状态成功但 TC002 不显示时，使用 broker 自带的订阅工具观察 `TC002_MQTT_TOPIC`，并确认设备当前启用了对应 Custom App。
 
 ## 故障排查
 
-### 扩展显示 `Follower count was not found`
+### `Follower count was not found`
 
-- 先手动打开目标主页，确认页面确实能看到“粉丝”数字。
-- 完成小红书登录、验证码或安全验证；本项目不会绕过这些控制。
-- 小红书页面结构可能已改变。保存页面中粉丝区域的脱敏 HTML fixture，再更新 `extension/extractor.js` 和测试。
+- 手动打开目标主页，确认页面确实显示“粉丝”数字。
+- 在同一 Chrome 配置中完成登录、验证码或安全验证。
+- 页面结构可能变化；项目不会通过签名破解、代理池或验证码绕过处理。
 
 ### `unauthorized`
 
-扩展设置中的令牌与启动桥接时的 `XHS_BRIDGE_TOKEN` 不一致。两边重新粘贴同一个值后重试。
+扩展设置中的令牌与当前 Bridge 进程的 `XHS_BRIDGE_TOKEN` 不一致。重新生成并在两处填写同一个值。
+
+### Bridge 启动提示 `TC002_MQTT_TOPIC is required`
+
+必须填写当前设备实际使用的 Custom App topic。项目故意不提供一个可能误投到其他设备的固定 topic。
 
 ### `mqtt_publish_failed`
 
-- 检查 `MQTT_HOST`/`MQTT_PORT`、用户名、密码和 TLS 设置；
-- 确认电脑能访问 broker；
-- 用 broker 自带的订阅工具观察 `TC002_MQTT_TOPIC`；
-- TC002 收到消息但不切换画面时，在设备上手动进入对应 Custom App。
+- 检查 `MQTT_HOST`、`MQTT_PORT`、用户名、密码和 TLS；
+- 确认当前电脑能够访问 broker；
+- 自签名证书只在可信局域网中按需启用；
+- 检查 TC002 固件所需的 topic 前缀和 Custom App payload 版本。
 
-### 页面被频繁验证
+## 已知问题
 
-把刷新间隔增大到 15–60 分钟并减少目标数量。不要使用代理池、签名破解或验证码绕过。
-
-## 限制
-
-- 这是页面适配器，不是小红书官方粉丝 API；页面变化时需要维护。
-- 页面显示 `1.2万` 时只能得到约数 `12000`。
-- 真机 MQTT topic 前缀与固件配置相关，需要用你设备的实际前缀替换示例。
-- TC002 官方仓库的通用 MQTT 规范仍在演进，本实现采用仓库现有 Custom App payload 结构。
+- 这是页面适配器，不是小红书官方 API；页面变化时可能需要更新解析器。
+- 页面给出缩写时只能获得约数。
+- Chrome 和 Bridge 必须在刷新期间运行。
+- TC002 MQTT 规范仍可能随固件演进。
+- 正式上游 PR 仍需要真实 TC002 运行照片或 GIF。
 
 ## 许可证
 
-GPL-3.0-or-later。
+GPL-3.0-or-later。分发修改版时保留许可证、版权和修改说明。
