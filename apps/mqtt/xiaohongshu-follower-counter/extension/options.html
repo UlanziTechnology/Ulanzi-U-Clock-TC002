@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TC002 小红书粉丝数设置</title>
+    <style>
+      body { font: 14px system-ui; max-width: 680px; margin: 32px auto; padding: 0 20px; color: #202124; }
+      label { display: block; font-weight: 600; margin-top: 18px; }
+      input, textarea { box-sizing: border-box; width: 100%; margin-top: 6px; padding: 9px; }
+      textarea { min-height: 110px; resize: vertical; }
+      button { margin-top: 20px; padding: 9px 18px; }
+      #status { margin-left: 12px; }
+      .hint { color: #5f6368; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>TC002 小红书粉丝数</h1>
+    <p>页面数据只会发送到本机 127.0.0.1，不会上传到第三方服务。</p>
+
+    <label for="profileUrls">小红书用户主页 URL（每行一个）</label>
+    <textarea id="profileUrls" placeholder="https://www.xiaohongshu.com/user/profile/..."></textarea>
+
+    <label for="refreshMinutes">刷新间隔（分钟，最少 5）</label>
+    <input id="refreshMinutes" type="number" min="5" step="1" value="15">
+
+    <label for="bridgeUrl">本地桥接地址</label>
+    <input id="bridgeUrl" type="url" value="http://127.0.0.1:17321">
+
+    <label for="bridgeToken">共享令牌</label>
+    <input id="bridgeToken" type="password" autocomplete="off">
+    <p class="hint">必须与启动桥接时的 XHS_BRIDGE_TOKEN 完全一致。</p>
+
+    <button id="save" type="button">保存</button><span id="status"></span>
+    <pre id="lastResult"></pre>
+    <script src="options.js"></script>
+  </body>
+</html>

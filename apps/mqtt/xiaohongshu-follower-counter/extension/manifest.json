@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "TC002 小红书粉丝数（本地）",
+  "version": "0.1.0",
+  "description": "在本地读取小红书用户主页粉丝数并发送到 TC002。",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": [
+    "https://www.xiaohongshu.com/*",
+    "https://xiaohongshu.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.xiaohongshu.com/user/profile/*",
+        "https://xiaohongshu.com/user/profile/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["extractor.js"],
+      "matches": [
+        "https://www.xiaohongshu.com/*",
+        "https://xiaohongshu.com/*"
+      ]
+    }
+  ],
+  "options_page": "options.html"
+}
