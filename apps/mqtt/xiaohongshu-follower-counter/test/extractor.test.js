@@ -67,7 +67,7 @@ test("extractFollowerSnapshot falls back to visible DOM near 粉丝 label", () =
 });
 
 test("extractFollowerSnapshot selects the number adjacent to 粉丝 in a combined stats row", () => {
-  const parent = fakeElement("关注 12 粉丝 8.7万 获赞与收藏 999");
+  const parent = fakeElement("12 关注 8.7万+ 粉丝 999 获赞与收藏");
   const document = fakeDocument({ elements: [fakeElement("粉丝", parent)] });
 
   assert.equal(

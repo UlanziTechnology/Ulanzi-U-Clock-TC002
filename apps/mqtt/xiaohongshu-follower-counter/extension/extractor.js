@@ -156,11 +156,11 @@ function extractFromDom(document) {
 }
 
 function parseFollowerContext(text) {
-  const number = "([\\d,.]+\\s*(?:万|亿|[kKmM])?)";
-  const after = text.match(new RegExp(`粉丝\\s*[:：]?\\s*${number}`));
-  if (after) return parseCompactCount(after[1]);
+  const number = "([\\d,.]+\\s*(?:万|亿|[kKmM])?\\+?)";
   const before = text.match(new RegExp(`${number}\\s*粉丝`));
-  return before ? parseCompactCount(before[1]) : null;
+  if (before) return parseCompactCount(before[1]);
+  const after = text.match(new RegExp(`粉丝\\s*[:：]?\\s*${number}`));
+  return after ? parseCompactCount(after[1]) : null;
 }
 
 function findNameInText(text) {
