@@ -22,6 +22,27 @@
 4. 扩展把标准化快照发送到 `127.0.0.1`；Bridge 验证数据后生成 52×16 PNG。
 5. Bridge 将 TC002 Custom App JSON payload 以 retained MQTT 消息发布到用户配置的 topic。
 
+## 跨电脑动态配置
+
+应用必须能从 GitHub 克隆到另一台受支持电脑后直接配置运行，不依赖开发机状态。代码、清单、
+文档和测试中不得把以下部署参数写死为唯一可用值：
+
+- 操作系统用户名、绝对文件路径、Chrome 用户数据目录或扩展 ID；
+- 小红书用户 ID、主页 URL、昵称或粉丝数；
+- Bridge 端口、共享令牌或其他本机生成的秘密；
+- MQTT broker 地址、端口、用户名、密码、TLS 选项、client ID 或 TC002 topic；
+- TC002 设备名称、局域网 IP、MAC 地址或其他设备标识。
+
+Chrome 设置页动态保存每台电脑自己的主页列表、刷新周期、Bridge URL 和令牌；Bridge 从当前进程的
+环境变量读取 MQTT 与 HTTP 配置。MQTT client ID 未配置时在当前进程动态生成。代码只使用相对项目
+路径和标准 Node.js/Chrome API，不依赖 macOS、Windows 或 Linux 的专属目录结构或 shell 行为。
+
+允许提供安全、可覆盖的示例或默认值，例如 `http://127.0.0.1:17321`、刷新 15 分钟和示例 MQTT
+topic。`127.0.0.1` 是所有受支持电脑共有的 loopback 地址，用于确保浏览器数据不会暴露到局域网；
+它不是开发机专属地址。端口和完整 Bridge URL 均可配置，但发布版 Bridge 仍只允许绑定 loopback。
+
+支持范围为运行 Node.js 20+ 和 Chrome/Chromium Manifest V3 的 Windows、macOS 与 Linux。
+
 ## 发布目录与职责
 
 ```text
@@ -50,6 +71,8 @@ apps/mqtt/xiaohongshu-follower-counter/
 - 权限仅限调度、设置、临时标签页、小红书主页及 IPv4 loopback Bridge。
 - 不申请 `cookies`、`webRequest`、`<all_urls>` 或浏览历史权限。
 - 设置页提供主页 URL、刷新间隔、Bridge URL、共享令牌和最近运行状态。
+- 首次安装使用通用默认值；保存后所有采集目标和连接参数均来自 `chrome.storage.local`，不得回退到
+  开发期间使用的真实主页或令牌。
 - 最低刷新周期保持 5 分钟，不实现验证码、登录或访问限制绕过。
 - 扩展目录本身必须可直接加载；图标使用项目自有简单像素素材，不包含第三方商标素材。
 
@@ -58,6 +81,7 @@ apps/mqtt/xiaohongshu-follower-counter/
 - 运行环境为 Node.js 20 或更高版本，运行时零 npm 第三方依赖。
 - HTTP 服务固定监听 `127.0.0.1`，写接口必须使用 Bearer 共享令牌。
 - 配置全部来自环境变量；`.env.example` 只给出安全示例，程序不隐式读取 `.env`。
+- 启动、检查和测试命令必须通过 `npm` 与 Node.js 实现，不要求 Bash、PowerShell 或特定绝对路径。
 - 支持 MQTT 3.1.1 TCP、可选用户名/密码和 TLS，发布 retained QoS 0 payload。
 - 启动时检查必填配置并输出不含密码和令牌的配置摘要。
 - 提供 `npm run check`，统一执行测试、语法检查、清单检查和敏感信息检查。
@@ -82,6 +106,8 @@ apps/mqtt/xiaohongshu-follower-counter/
 - 粉丝数字和 `万/亿/k/m` 单位转换；
 - 小红书内嵌 JSON 与真实 DOM 统计顺序；
 - 扩展权限、消息字段、刷新周期和版本一致性；
+- Windows、macOS、Linux 共用的相对路径与运行时配置契约；
+- 扫描源码和清单，拒绝开发机绝对路径、真实主页 ID、固定 broker、固定凭证和固定设备标识；
 - HTTP loopback 绑定、CORS、Bearer 鉴权与输入限制；
 - 52×16 PNG 和 TC002 Custom App payload；
 - MQTT CONNECT、CONNACK、retained PUBLISH 及真实 loopback socket；
