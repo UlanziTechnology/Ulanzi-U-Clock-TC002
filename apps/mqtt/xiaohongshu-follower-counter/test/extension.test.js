@@ -26,9 +26,13 @@ test("content script imports the tested extractor and sends only a snapshot", as
   assert.match(source, /type:\s*["']snapshot["']/);
 });
 
-test("service worker enforces a five-minute minimum and posts to loopback bridge", async () => {
+test("service worker schedules second-based refreshes without overlapping batches", async () => {
   const source = await readFile(new URL("service-worker.js", EXTENSION), "utf8");
-  assert.match(source, /MIN_REFRESH_MINUTES\s*=\s*5/);
+  assert.match(source, /refresh-config\.js/);
+  assert.match(source, /migrateRefreshSeconds/);
+  assert.match(source, /refreshSeconds\s*\/\s*60/);
+  assert.match(source, /refreshInProgress/);
+  assert.doesNotMatch(source, /MIN_REFRESH_MINUTES/);
   assert.match(source, /127\.0\.0\.1/);
   assert.match(source, /Authorization/);
   assert.match(source, /Bearer/);
@@ -43,9 +47,14 @@ test("service worker enforces a five-minute minimum and posts to loopback bridge
 
 test("options page exposes profile, refresh, bridge, and token settings", async () => {
   const html = await readFile(new URL("options.html", EXTENSION), "utf8");
-  for (const id of ["profileUrls", "refreshMinutes", "bridgeUrl", "bridgeToken"]) {
+  for (const id of ["profileUrls", "refreshSeconds", "bridgeUrl", "bridgeToken"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`));
   }
+  assert.match(html, /刷新间隔（秒，最少 5）/);
+  assert.match(html, /id="refreshSeconds"[^>]*min="5"[^>]*step="1"[^>]*value="30"/);
+  assert.match(html, /5 秒/);
+  assert.match(html, /60 秒/);
+  assert.match(html, /type="module"/);
   assert.match(html, /当前电脑/);
   assert.match(html, /端口/);
 });
@@ -55,6 +64,10 @@ test("options save canonical per-machine settings without temporary profile para
   assert.match(source, /chrome\.storage\.local\.get\(DEFAULTS\)/);
   assert.match(source, /chrome\.storage\.local\.set/);
   assert.match(source, /canonicalProfileUrl/);
+  assert.match(source, /normalizeRefreshSeconds/);
+  assert.match(source, /migrateRefreshSeconds/);
+  assert.match(source, /refreshSeconds/);
+  assert.doesNotMatch(source, /refreshMinutes/);
   assert.match(source, /url\.search\s*=\s*["']["']/);
   assert.match(source, /url\.hash\s*=\s*["']["']/);
   assert.doesNotMatch(source, /\/user\/profile\/[0-9a-f]{20,}/i);

@@ -21,8 +21,9 @@
     <label for="profileUrls">小红书用户主页 URL（每行一个）</label>
     <textarea id="profileUrls" placeholder="https://www.xiaohongshu.com/user/profile/..."></textarea>
 
-    <label for="refreshMinutes">刷新间隔（分钟，最少 5）</label>
-    <input id="refreshMinutes" type="number" min="5" step="1" value="15">
+    <label for="refreshSeconds">刷新间隔（秒，最少 5）</label>
+    <input id="refreshSeconds" type="number" min="5" step="1" value="30">
+    <p class="hint">5 秒仅建议短期联调；长期运行建议设置为 60 秒以上，以降低登录验证和访问限流风险。</p>
 
     <label for="bridgeUrl">本地桥接地址</label>
     <input id="bridgeUrl" type="url" value="http://127.0.0.1:17321">
@@ -34,6 +35,6 @@
 
     <button id="save" type="button">保存</button><span id="status"></span>
     <pre id="lastResult"></pre>
-    <script src="options.js"></script>
+    <script type="module" src="options.js"></script>
   </body>
 </html>

@@ -17,7 +17,7 @@ export async function migrateRefreshSeconds(storageArea) {
       ? Number(stored.refreshMinutes) * 60
       : DEFAULT_REFRESH_SECONDS;
   const refreshSeconds = normalizeRefreshSeconds(candidate);
-  await storageArea.set({ refreshSeconds });
+  if (stored.refreshSeconds !== refreshSeconds) await storageArea.set({ refreshSeconds });
   if (stored.refreshMinutes !== undefined) await storageArea.remove("refreshMinutes");
   return refreshSeconds;
 }

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { migrateRefreshSeconds } from "./refresh-config.js";
 
 const ALARM_NAME = "refresh-xiaohongshu-followers";
-const MIN_REFRESH_MINUTES = 5;
 const DEFAULTS = {
   profileUrls: [],
-  refreshMinutes: 15,
   bridgeUrl: "http://127.0.0.1:17321",
   bridgeToken: "",
 };
+let refreshInProgress = false;
 
 chrome.runtime.onInstalled.addListener(async () => {
   await scheduleRefresh();
@@ -17,10 +17,12 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 chrome.runtime.onStartup.addListener(scheduleRefresh);
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === ALARM_NAME) refreshProfiles();
+  if (alarm.name === ALARM_NAME) void refreshProfiles();
 });
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && (changes.refreshMinutes || changes.profileUrls)) scheduleRefresh();
+  if (area === "local" && (changes.refreshSeconds || changes.refreshMinutes || changes.profileUrls)) {
+    void scheduleRefresh();
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -38,20 +40,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function scheduleRefresh() {
-  const { refreshMinutes } = await chrome.storage.local.get(DEFAULTS);
-  const periodInMinutes = Math.max(MIN_REFRESH_MINUTES, Number(refreshMinutes) || DEFAULTS.refreshMinutes);
+  const refreshSeconds = await migrateRefreshSeconds(chrome.storage.local);
   await chrome.alarms.clear(ALARM_NAME);
-  await chrome.alarms.create(ALARM_NAME, { delayInMinutes: 0.1, periodInMinutes });
+  await chrome.alarms.create(ALARM_NAME, {
+    delayInMinutes: 1 / 60,
+    periodInMinutes: refreshSeconds / 60,
+  });
 }
 
 async function refreshProfiles() {
-  const { profileUrls } = await chrome.storage.local.get(DEFAULTS);
-  for (const profileUrl of profileUrls) {
-    if (!isProfileUrl(profileUrl)) continue;
-    const tab = await chrome.tabs.create({ url: profileUrl, active: false });
-    await markManaged(tab.id);
-    setTimeout(() => closeManaged(tab.id), 45_000);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+  if (refreshInProgress) return;
+  refreshInProgress = true;
+  try {
+    const { profileUrls } = await chrome.storage.local.get(DEFAULTS);
+    for (const profileUrl of profileUrls) {
+      if (!isProfileUrl(profileUrl)) continue;
+      const tab = await chrome.tabs.create({ url: profileUrl, active: false });
+      await markManaged(tab.id);
+      setTimeout(() => closeManaged(tab.id), 45_000);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  } finally {
+    refreshInProgress = false;
   }
 }
 

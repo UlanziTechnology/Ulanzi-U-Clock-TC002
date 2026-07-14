@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { migrateRefreshSeconds, normalizeRefreshSeconds } from "./refresh-config.js";
 
 const DEFAULTS = {
   profileUrls: [],
-  refreshMinutes: 15,
   bridgeUrl: "http://127.0.0.1:17321",
   bridgeToken: "",
   lastResult: null,
@@ -12,9 +12,12 @@ document.addEventListener("DOMContentLoaded", restore);
 document.querySelector("#save").addEventListener("click", save);
 
 async function restore() {
-  const config = await chrome.storage.local.get(DEFAULTS);
+  const [config, refreshSeconds] = await Promise.all([
+    chrome.storage.local.get(DEFAULTS),
+    migrateRefreshSeconds(chrome.storage.local),
+  ]);
   document.querySelector("#profileUrls").value = config.profileUrls.join("\n");
-  document.querySelector("#refreshMinutes").value = config.refreshMinutes;
+  document.querySelector("#refreshSeconds").value = refreshSeconds;
   document.querySelector("#bridgeUrl").value = config.bridgeUrl;
   document.querySelector("#bridgeToken").value = config.bridgeToken;
   document.querySelector("#lastResult").textContent = config.lastResult
@@ -31,13 +34,13 @@ async function save() {
       .filter(Boolean)
       .map(canonicalProfileUrl);
 
-    const refreshMinutes = Math.max(5, Math.floor(Number(document.querySelector("#refreshMinutes").value) || 15));
+    const refreshSeconds = normalizeRefreshSeconds(document.querySelector("#refreshSeconds").value);
     const bridgeUrl = document.querySelector("#bridgeUrl").value.trim();
     assertBridgeUrl(bridgeUrl);
     const bridgeToken = document.querySelector("#bridgeToken").value.trim();
     if (!bridgeToken) throw new Error("共享令牌不能为空");
 
-    await chrome.storage.local.set({ profileUrls, refreshMinutes, bridgeUrl, bridgeToken });
+    await chrome.storage.local.set({ profileUrls, refreshSeconds, bridgeUrl, bridgeToken });
     status.textContent = "已保存，将在数秒内刷新";
   } catch (error) {
     status.textContent = error.message;

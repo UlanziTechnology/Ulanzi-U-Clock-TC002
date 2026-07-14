@@ -40,16 +40,27 @@ test("migration normalizes an invalid stored seconds value", async () => {
   assert.deepEqual(storage.data, { refreshSeconds: 5 });
 });
 
+test("migration does not rewrite an already normalized seconds value", async () => {
+  const storage = fakeStorage({ refreshSeconds: 30 });
+  assert.equal(await refreshConfig.migrateRefreshSeconds(storage), 30);
+  assert.equal(storage.setCalls, 0);
+  assert.equal(storage.removeCalls, 0);
+});
+
 function fakeStorage(initial) {
   return {
     data: { ...initial },
+    setCalls: 0,
+    removeCalls: 0,
     async get(keys) {
       return Object.fromEntries(keys.filter((key) => key in this.data).map((key) => [key, this.data[key]]));
     },
     async set(values) {
+      this.setCalls += 1;
       Object.assign(this.data, values);
     },
     async remove(key) {
+      this.removeCalls += 1;
       delete this.data[key];
     },
   };

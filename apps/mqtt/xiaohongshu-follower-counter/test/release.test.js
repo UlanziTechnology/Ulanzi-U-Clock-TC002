@@ -51,6 +51,7 @@ test("package exposes one cross-platform release check", async () => {
   assert.match(packageJson.scripts.check, /npm test/);
   assert.match(packageJson.scripts.check, /check:syntax/);
   assert.match(packageJson.scripts.check, /check:release/);
+  assert.match(packageJson.scripts["check:syntax"], /extension\/refresh-config\.js/);
   const checker = await readFile(new URL("scripts/check-release.js", APP), "utf8");
   assert.match(checker, /Release check passed/);
 });
