@@ -8,6 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "preview": "node bridge/render-preview.js",
     "start": "node bridge/server.js",
     "test": "node --test test/*.test.js"
   }
