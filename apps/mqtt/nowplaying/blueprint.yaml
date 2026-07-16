@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 cailurus
+#
+# TC002 正在播放
+# 监听一个 media_player 实体，把"曲名 - 歌手"和播放/暂停图标发布到 TC002。
+
+blueprint:
+  name: TC002 正在播放
+  description: |
+    监听一个 media_player 实体，状态或曲目变化时，把「曲名 - 歌手」文字加播放/暂停
+    图标发布到 TC002。设备字体仅支持 ASCII，非 ASCII 字符会被过滤（中文曲名可能显示不全）。
+
+    Author: cailurus  License: GPL-3.0-or-later
+  domain: automation
+  source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/nowplaying/blueprint.yaml
+  input:
+    media_entity:
+      name: 媒体播放器实体
+      selector:
+        entity: { domain: media_player }
+    custom_app_topic:
+      name: TC002 Custom App MQTT topic
+      default: ulanzi_1bf6/custom/nowplaying
+      selector: { text: {} }
+    app_duration:
+      name: 显示时长
+      default: 30
+      selector:
+        number: { min: 1, max: 86400, unit_of_measurement: s, mode: box }
+    text_color:
+      name: 文字颜色
+      default: "#FFFFFF"
+      selector: { text: {} }
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input media_entity
+
+variables:
+  media_id: !input media_entity
+  duration: !input app_duration
+  color: !input text_color
+  play_image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAQCAYAAAArij59AAAAQklEQVR4nGNgoA+we9D1H5ccEyFFTOgm2aEpRFEAA8iKGNEF0AFWExig4JBCGSNOBSBJEM2CSwKrFeiScIDPkXQAACnQGAd0AquDAAAAAElFTkSuQmCC"
+  pause_image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAQCAYAAAArij59AAAAHElEQVR4nGNgoA+we9D1H4Sx8ZkIaWYaVUAvAAAqIwqvRPOl7AAAAABJRU5ErkJggg=="
+  st: "{{ states(media_id) }}"
+  title: "{{ state_attr(media_id, 'media_title') | default('', true) }}"
+  artist: "{{ state_attr(media_id, 'media_artist') | default('', true) }}"
+  raw: "{{ (title ~ (' - ' ~ artist if artist else '')) | upper }}"
+  ascii_text: "{{ raw | regex_replace(find='[^ -~]', replace='') | trim }}"
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input custom_app_topic
+      retain: false
+      payload: >-
+        {% set image = play_image if st == 'playing' else pause_image %}
+        {% set label = ascii_text if ascii_text else 'MUSIC' %}
+        {
+          "duration": {{ duration | int }},
+          "text": [{"content": "{{ label }}", "fontHeight": 10, "x": 10, "y": 3, "color": "{{ color }}"}],
+          "image": [{"data": "{{ image }}", "position": [0, 0]}],
+          "draw": []
+        }
