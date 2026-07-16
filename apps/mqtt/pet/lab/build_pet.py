@@ -67,9 +67,9 @@ def _palette_image():
 
 
 def _on_canvas(frame, palimg):
-    """Place a native cat frame on a 52x16 black canvas (x=2, bottom-aligned) -> P (fixed palette)."""
+    """Place a native cat frame on a 52x16 black canvas (horizontally centered, bottom-aligned) -> P (fixed palette)."""
     c = Image.new("RGBA", (52, 16), (0, 0, 0, 255))
-    c.alpha_composite(frame, (2, 16 - frame.height))
+    c.alpha_composite(frame, ((52 - frame.width) // 2, 16 - frame.height))
     return c.convert("RGB").quantize(palette=palimg, dither=Image.NONE)
 
 
