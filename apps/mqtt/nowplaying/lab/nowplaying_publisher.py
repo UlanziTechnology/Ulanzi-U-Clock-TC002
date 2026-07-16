@@ -45,12 +45,24 @@ def _icon(state):
 
 
 def _text_mask(text):
-    """Render text to a 1-bit-ish mask (crisp, thresholded default bitmap font)."""
+    """Render text to a crisp mask (thresholded default bitmap font), then bolden the
+    thin 1px strokes by a 1px right+down dilation so it reads chunky like the device font."""
     font = ImageFont.load_default()
     tw = max(1, int(font.getlength(text)))
-    m = Image.new("L", (tw, H), 0)
-    ImageDraw.Draw(m).text((0, 3), text, fill=255, font=font)
-    return m.point(lambda p: 255 if p > 110 else 0), tw
+    base = Image.new("L", (tw + 1, H), 0)
+    ImageDraw.Draw(base).text((0, 3), text, fill=255, font=font)
+    base = base.point(lambda p: 255 if p > 110 else 0)
+    bold = base.copy()
+    sp, bp = base.load(), bold.load()
+    w2, h2 = base.size
+    for y in range(h2):
+        for x in range(w2):
+            if sp[x, y] > 127:                        # thicken: light up right + down neighbours
+                if x + 1 < w2:
+                    bp[x + 1, y] = 255
+                if y + 1 < h2:
+                    bp[x, y + 1] = 255
+    return bold, bold.width
 
 
 def _compose(icon, mask, positions, color):
@@ -86,11 +98,11 @@ def render_gif(title, artist, state, color, out):
         frame = _compose(icon, mask, [TEXT_X + (avail - tw) // 2], col)
         frames, dur = [frame], 3000
     else:                                         # scroll -> seamless loop
-        gap, step = 12, 2
+        gap, step = 12, 2                          # 2px steps, but slow frames -> gentle scroll (~10px/s)
         period = tw + gap
         frames = [_compose(icon, mask, [TEXT_X - off, TEXT_X - off + period], col)
                   for off in range(0, period, step)]
-        dur = 90
+        dur = 200
     frames[0].save(out, save_all=True, append_images=frames[1:], loop=0, duration=dur, disposal=2)
     with open(out, "rb") as f:
         return f.read()
