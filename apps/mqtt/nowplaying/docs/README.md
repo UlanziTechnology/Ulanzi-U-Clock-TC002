@@ -10,7 +10,13 @@
 
 ## 预览
 
-见 `preview/demo.gif`（真机拍摄）。`lab/build/demo.gif` 是脚本渲染出的走马灯示意。
+设备渲染画面（52×16 像素，走马灯滚动）：
+
+![demo](../preview/demo.gif)
+
+真机实拍：
+
+![device](../preview/device.gif)
 
 ## 依赖
 
