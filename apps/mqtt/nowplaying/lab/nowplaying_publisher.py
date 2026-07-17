@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 cailurus
+# Copyright (C) 2026 小熊猫
 """nowplaying — scrolling "TITLE - ARTIST" marquee for a TC002 over MQTT.
 
 The device does NOT scroll text (its Custom-App text element just clips to rect), so a
