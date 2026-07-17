@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 cailurus
+# Copyright (C) 2026 小熊猫
 #
 # TC002 桌面像素宠物（灰猫）
 # 通过 MQTT 发布 TC002 Custom App JSON payload，按 Home Assistant 实体状态切换宠物动作。
@@ -15,7 +15,7 @@ blueprint:
     idle: 站立（轻微呼吸）  walk: 散步  run: 奔跑
     例如把它接到「在家/活动/忙碌」这类状态，或任意 input_select。
 
-    素材 Shepardskin (CC0)，已重上色。Author: cailurus  License: GPL-3.0-or-later
+    素材 Shepardskin (CC0)，已重上色。Author: 小熊猫  License: GPL-3.0-or-later
   domain: automation
   source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/pet/blueprint.yaml
   input:
