@@ -8,7 +8,15 @@
 
 ## 预览
 
-见 `preview/demo.gif`（真机拍摄）。`lab/build/fire.gif` 是本地生成的火焰素材。
+设备渲染画面（52×16 像素）：
+
+![demo](../preview/demo.gif)
+
+真机实拍：
+
+![device](../preview/device.gif)
+
+（`lab/build/fire.gif` 是本地生成的火焰素材。）
 
 ## 配置参数
 
