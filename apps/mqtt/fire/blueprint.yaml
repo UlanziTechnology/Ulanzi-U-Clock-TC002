@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 cailurus
+# Copyright (C) 2026 小熊猫
 #
 # TC002 虚拟壁炉
 # 当某个开关/布尔实体打开时，在 TC002 上点一炉火（循环火焰 GIF）；关闭时熄灭。
@@ -11,7 +11,7 @@ blueprint:
     打开时发布循环火焰动画；关闭时发布熄灭（黑屏）帧。
     可接 input_boolean、switch，或"温度低于阈值"的模板实体（冷了就生火）。
 
-    Author: cailurus  License: GPL-3.0-or-later
+    Author: 小熊猫  License: GPL-3.0-or-later
   domain: automation
   source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/fire/blueprint.yaml
   input:
