@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { migrateRefreshSeconds, normalizeRefreshSeconds } from "./refresh-config.js";
 import { canonicalProfileUrl, migrateBindings, normalizeBindings } from "./bindings-config.js";
+import {
+  migrateHomeAssistantConfig,
+  normalizeHomeAssistantUrl,
+  normalizeWebhookId,
+  requiredOrigins,
+} from "./ha-config.js";
 
 const DEFAULTS = {
-  bridgeUrl: "http://127.0.0.1:17321",
-  bridgeToken: "",
   lastResults: {},
 };
 
@@ -13,18 +17,20 @@ document.querySelector("#save").addEventListener("click", save);
 document.querySelector("#addBinding").addEventListener("click", () => addBindingRow());
 
 async function restore() {
-  const [config, refreshSeconds, bindings] = await Promise.all([
+  const [stored, haConfig, refreshSeconds, bindings] = await Promise.all([
     chrome.storage.local.get(DEFAULTS),
+    migrateHomeAssistantConfig(chrome.storage.local),
     migrateRefreshSeconds(chrome.storage.local),
     migrateBindings(chrome.storage.local),
   ]);
   renderBindings(bindings.length ? bindings : [{ deviceIp: "", profileUrl: "" }]);
   document.querySelector("#refreshSeconds").value = refreshSeconds;
-  document.querySelector("#bridgeUrl").value = config.bridgeUrl;
-  document.querySelector("#bridgeToken").value = config.bridgeToken;
-  document.querySelector("#lastResult").textContent = Object.keys(config.lastResults).length
-    ? `各设备最近结果：${JSON.stringify(config.lastResults, null, 2)}`
+  document.querySelector("#homeAssistantUrl").value = haConfig.homeAssistantUrl;
+  document.querySelector("#webhookId").value = haConfig.webhookId;
+  document.querySelector("#lastResult").textContent = Object.keys(stored.lastResults).length
+    ? `各设备最近结果（含动态发现的 devicePrefix）：${JSON.stringify(stored.lastResults, null, 2)}`
     : "尚无采集结果";
+  await showPermissionStatus(haConfig.homeAssistantUrl, bindings);
 }
 
 async function save() {
@@ -37,14 +43,18 @@ async function save() {
     if (!bindings.length) throw new Error("请至少添加一台设备");
 
     const refreshSeconds = normalizeRefreshSeconds(document.querySelector("#refreshSeconds").value);
-    const bridgeUrl = document.querySelector("#bridgeUrl").value.trim();
-    assertBridgeUrl(bridgeUrl);
-    const bridgeToken = document.querySelector("#bridgeToken").value.trim();
-    if (!bridgeToken) throw new Error("共享令牌不能为空");
+    const homeAssistantUrl = normalizeHomeAssistantUrl(document.querySelector("#homeAssistantUrl").value);
+    const webhookId = normalizeWebhookId(document.querySelector("#webhookId").value);
+    const origins = requiredOrigins(homeAssistantUrl, bindings);
+    const permission = { origins };
+    const granted = await chrome.permissions.contains(permission)
+      || await chrome.permissions.request(permission);
+    if (!granted) throw new Error("需要授权访问 Home Assistant 和 TC002 设备地址");
 
-    await chrome.storage.local.set({ bindings, refreshSeconds, bridgeUrl, bridgeToken });
-    await chrome.storage.local.remove("profileUrls");
+    await chrome.storage.local.set({ bindings, refreshSeconds, homeAssistantUrl, webhookId });
+    await chrome.storage.local.remove(["profileUrls", "bridgeUrl", "bridgeToken"]);
     renderBindings(bindings);
+    await showPermissionStatus(homeAssistantUrl, bindings);
     status.textContent = "已保存，将在数秒内刷新";
   } catch (error) {
     status.textContent = error.message;
@@ -88,9 +98,17 @@ function field(labelText, name, value, placeholder) {
   return label;
 }
 
-function assertBridgeUrl(value) {
-  const url = new URL(value);
-  if (url.protocol !== "http:" || url.hostname !== "127.0.0.1") {
-    throw new Error("桥接地址必须使用 http://127.0.0.1");
+async function showPermissionStatus(homeAssistantUrl, bindings) {
+  const target = document.querySelector("#permissionStatus");
+  if (!homeAssistantUrl || !bindings.some((binding) => binding.deviceIp)) {
+    target.textContent = "保存时将请求访问 Home Assistant 和所填 TC002 地址的权限。";
+    return;
+  }
+  try {
+    const origins = requiredOrigins(homeAssistantUrl, bindings.filter((binding) => binding.deviceIp));
+    const granted = await chrome.permissions.contains({ origins });
+    target.textContent = granted ? "局域网访问权限已授予。" : "尚未授予全部局域网访问权限，请重新保存。";
+  } catch {
+    target.textContent = "请填写有效配置后保存。";
   }
 }

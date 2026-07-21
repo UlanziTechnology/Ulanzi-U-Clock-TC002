@@ -21,7 +21,17 @@
   </head>
   <body>
     <h1>TC002 小红书粉丝数</h1>
-    <p>这些设置只保存在当前电脑的 Chrome 中。页面数据只会发送到本机 127.0.0.1，不会上传到第三方服务。</p>
+    <p>这些设置只保存在当前电脑的 Chrome 中。扩展读取局域网 TC002 配置，并把页面数据发送到你指定的 Home Assistant。</p>
+
+    <h2>Home Assistant</h2>
+    <label for="homeAssistantUrl">Home Assistant 地址</label>
+    <input id="homeAssistantUrl" type="url" placeholder="http://10.10.20.10:8123">
+    <p class="hint">HTTP 地址必须位于局域网；也支持 HTTPS 地址。无需填写 Home Assistant 登录令牌。</p>
+
+    <label for="webhookId">Webhook ID</label>
+    <input id="webhookId" type="password" autocomplete="off" placeholder="蓝图实例中配置的随机 Webhook ID">
+    <p class="hint">使用蓝图中相同的 local-only（仅限本地）Webhook ID。它相当于共享密钥，请勿公开。</p>
+    <p id="permissionStatus" class="hint"></p>
 
     <h2>设备与主页绑定</h2>
     <p class="hint">每台 TC002 绑定一个小红书主页。请填写 TC002 设备 IP；设备和电脑需能通过同一局域网互相访问。</p>
@@ -32,14 +42,6 @@
     <label for="refreshSeconds">刷新间隔（秒，最少 5）</label>
     <input id="refreshSeconds" type="number" min="5" step="1" value="30">
     <p class="hint">5 秒仅建议短期联调；长期运行建议设置为 60 秒以上，以降低登录验证和访问限流风险。</p>
-
-    <label for="bridgeUrl">本地桥接地址</label>
-    <input id="bridgeUrl" type="url" value="http://127.0.0.1:17321">
-    <p class="hint">默认端口为 17321；如当前电脑上的 Bridge 使用其他端口，请在这里修改。</p>
-
-    <label for="bridgeToken">共享令牌</label>
-    <input id="bridgeToken" type="password" autocomplete="off">
-    <p class="hint">必须与当前电脑启动 Bridge 时设置的 XHS_BRIDGE_TOKEN 完全一致。</p>
 
     <button id="save" type="button">保存</button><span id="status"></span>
     <pre id="lastResult"></pre>

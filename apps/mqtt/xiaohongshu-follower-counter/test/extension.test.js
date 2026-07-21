@@ -8,9 +8,12 @@ const EXTENSION = new URL("../extension/", import.meta.url);
 test("manifest uses MV3 with narrowly scoped permissions", async () => {
   const manifest = JSON.parse(await readFile(new URL("manifest.json", EXTENSION), "utf8"));
   assert.equal(manifest.manifest_version, 3);
+  assert.equal(manifest.version, "0.2.0");
   assert.deepEqual(manifest.permissions.sort(), ["alarms", "storage"]);
   assert.ok(manifest.host_permissions.includes("https://www.xiaohongshu.com/*"));
-  assert.ok(manifest.host_permissions.includes("http://127.0.0.1/*"));
+  assert.ok(manifest.host_permissions.includes("https://xiaohongshu.com/*"));
+  assert.deepEqual(manifest.optional_host_permissions.sort(), ["http://*/*", "https://*/*"]);
+  assert.ok(!manifest.host_permissions.some((host) => host.includes("127.0.0.1")));
   assert.ok(!manifest.host_permissions.includes("<all_urls>"));
   assert.ok(!manifest.permissions.includes("cookies"));
   assert.ok(!manifest.permissions.includes("webRequest"));
@@ -33,9 +36,15 @@ test("service worker schedules second-based refreshes without overlapping batche
   assert.match(source, /refreshSeconds\s*\/\s*60/);
   assert.match(source, /refreshInProgress/);
   assert.doesNotMatch(source, /MIN_REFRESH_MINUTES/);
-  assert.match(source, /127\.0\.0\.1/);
-  assert.match(source, /Authorization/);
-  assert.match(source, /Bearer/);
+  assert.match(source, /device-discovery\.js/);
+  assert.match(source, /render\.js/);
+  assert.match(source, /ha-webhook\.js/);
+  assert.match(source, /createDeviceResolver/);
+  assert.match(source, /buildCustomAppPayload/);
+  assert.match(source, /postFollowerPayload/);
+  assert.doesNotMatch(source, /127\.0\.0\.1/);
+  assert.doesNotMatch(source, /\/v1\/follower-count/);
+  assert.doesNotMatch(source, /Authorization|Bearer/);
   assert.match(source, /profileUrl.*displayName.*followerCount.*observedAt/s);
   assert.match(source, /bindings/);
   assert.match(source, /deviceIp/);
@@ -49,11 +58,12 @@ test("service worker schedules second-based refreshes without overlapping batche
   assert.doesNotMatch(source, /chrome-extension:\/\/[a-p]{32}/);
 });
 
-test("options page exposes profile, refresh, bridge, and token settings", async () => {
+test("options page exposes profile, refresh, Home Assistant, and Webhook settings", async () => {
   const html = await readFile(new URL("options.html", EXTENSION), "utf8");
-  for (const id of ["bindings", "addBinding", "refreshSeconds", "bridgeUrl", "bridgeToken"]) {
+  for (const id of ["bindings", "addBinding", "refreshSeconds", "homeAssistantUrl", "webhookId", "permissionStatus", "lastResult"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`));
   }
+  assert.doesNotMatch(html, /bridgeUrl|bridgeToken|XHS_BRIDGE_TOKEN/);
   assert.match(html, /TC002 设备 IP/);
   assert.doesNotMatch(html, /id=["']profileUrls["']/);
   assert.match(html, /刷新间隔（秒，最少 5）/);
@@ -62,7 +72,9 @@ test("options page exposes profile, refresh, bridge, and token settings", async 
   assert.match(html, /60 秒/);
   assert.match(html, /type="module"/);
   assert.match(html, /当前电脑/);
-  assert.match(html, /端口/);
+  assert.match(html, /Home Assistant/);
+  assert.match(html, /Webhook/);
+  assert.match(html, /local-only|仅限本地/i);
 });
 
 test("options save canonical per-machine settings without temporary profile parameters", async () => {
@@ -75,8 +87,16 @@ test("options save canonical per-machine settings without temporary profile para
   assert.match(source, /normalizeBindings/);
   assert.match(source, /normalizeRefreshSeconds/);
   assert.match(source, /migrateRefreshSeconds/);
+  assert.match(source, /migrateHomeAssistantConfig/);
+  assert.match(source, /requiredOrigins/);
+  assert.match(source, /chrome\.permissions\.contains/);
+  assert.match(source, /chrome\.permissions\.request/);
+  assert.match(source, /devicePrefix/);
+  assert.match(source, /textContent/);
   assert.match(source, /refreshSeconds/);
   assert.doesNotMatch(source, /refreshMinutes/);
+  assert.doesNotMatch(source, /bridgeUrl\s*:|bridgeToken\s*:|XHS_BRIDGE_TOKEN|Authorization:\s*`?Bearer/);
+  assert.match(source, /remove\(\["profileUrls", "bridgeUrl", "bridgeToken"\]\)/);
   assert.match(bindingsSource, /url\.search\s*=\s*["']["']/);
   assert.match(bindingsSource, /url\.hash\s*=\s*["']["']/);
   assert.doesNotMatch(source, /\/user\/profile\/[0-9a-f]{20,}/i);

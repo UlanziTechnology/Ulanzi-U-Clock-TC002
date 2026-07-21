@@ -369,7 +369,7 @@ git commit -m "feat: relay follower payloads through Home Assistant"
 - Consumes: Task 1 renderer, Task 2 resolver, Task 3 HA config/Webhook client.
 - Produces: end-user MV3 runtime without localhost Bridge dependencies.
 
-- [ ] **Step 1: Rewrite extension static tests for the new UI and permissions**
+- [x] **Step 1: Rewrite extension static tests for the new UI and permissions**
 
 Require Manifest version `0.2.0`, existing static Xiaohongshu host permissions, and:
 
@@ -382,13 +382,13 @@ Require option IDs `homeAssistantUrl`, `webhookId`, `bindings`, `refreshSeconds`
 
 Require service-worker imports for `device-discovery.js`, `render.js`, and `ha-webhook.js`, plus `Promise.allSettled`, `lastResults`, and no `127.0.0.1` or `/v1/follower-count`.
 
-- [ ] **Step 2: Run extension tests and verify RED**
+- [x] **Step 2: Run extension tests and verify RED**
 
 Run `node --test test/extension.test.js test/bindings-config.test.js`.
 
 Expected: FAIL on old Bridge UI, permissions, and service-worker source.
 
-- [ ] **Step 3: Update Manifest V3 permissions and version**
+- [x] **Step 3: Update Manifest V3 permissions and version**
 
 Set:
 
@@ -406,13 +406,13 @@ Set:
 
 Keep the module service worker, content script matches, and tested extractor resource.
 
-- [ ] **Step 4: Replace Bridge controls with HA controls**
+- [x] **Step 4: Replace Bridge controls with HA controls**
 
 In `options.html`, add URL input `homeAssistantUrl`, password input `webhookId`, an explanation of local-only HA Webhooks, and a permission status area. Preserve binding rows and refresh controls.
 
 In `options.js`, normalize values with Task 3 helpers, request only `requiredOrigins(...)`, save only after permission succeeds, remove legacy Bridge fields, and display per-device discovered prefix/result without using `innerHTML`.
 
-- [ ] **Step 5: Replace Bridge POST orchestration in the service worker**
+- [x] **Step 5: Replace Bridge POST orchestration in the service worker**
 
 Create one resolver at module scope:
 
@@ -433,13 +433,13 @@ await postFollowerPayload(
 
 Record `devicePrefix`, `displayName`, `followerCount`, `observedAt`, and `ok` per device. On discovery or HA failure, clear only that device resolver entry. Continue closing managed tabs exactly as before.
 
-- [ ] **Step 6: Run extension tests and verify GREEN**
+- [x] **Step 6: Run extension tests and verify GREEN**
 
 Run `node --test test/extension.test.js test/bindings-config.test.js`.
 
 Expected: all extension configuration/source-contract tests pass.
 
-- [ ] **Step 7: Commit the MV3 migration**
+- [x] **Step 7: Commit the MV3 migration**
 
 ```bash
 git add apps/mqtt/xiaohongshu-follower-counter/extension \

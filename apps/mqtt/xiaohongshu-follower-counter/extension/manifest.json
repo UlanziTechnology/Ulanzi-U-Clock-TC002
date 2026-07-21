@@ -1,14 +1,14 @@
 {
   "manifest_version": 3,
   "name": "TC002 小红书粉丝数（本地）",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "在本地读取小红书用户主页粉丝数并发送到 TC002。",
   "permissions": ["storage", "alarms"],
   "host_permissions": [
     "https://www.xiaohongshu.com/*",
-    "https://xiaohongshu.com/*",
-    "http://127.0.0.1/*"
+    "https://xiaohongshu.com/*"
   ],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "service-worker.js",
     "type": "module"

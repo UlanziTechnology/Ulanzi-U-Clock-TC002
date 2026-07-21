@@ -1,22 +1,33 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { migrateRefreshSeconds } from "./refresh-config.js";
 import { canonicalProfileUrl, migrateBindings, normalizeBindings } from "./bindings-config.js";
+import { migrateHomeAssistantConfig } from "./ha-config.js";
+import { createDeviceResolver } from "./device-discovery.js";
+import { buildCustomAppPayload } from "./render.js";
+import { postFollowerPayload } from "./ha-webhook.js";
 
 const ALARM_NAME = "refresh-xiaohongshu-followers";
 const DEFAULTS = {
   bindings: [],
-  bridgeUrl: "http://127.0.0.1:17321",
-  bridgeToken: "",
+  homeAssistantUrl: "",
+  webhookId: "",
   lastResults: {},
 };
+const deviceResolver = createDeviceResolver();
 let refreshInProgress = false;
 let resultWriteQueue = Promise.resolve();
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const bindings = await migrateBindings(chrome.storage.local);
+  const [bindings] = await Promise.all([
+    migrateBindings(chrome.storage.local),
+    migrateHomeAssistantConfig(chrome.storage.local),
+  ]);
   await scheduleRefresh();
   const config = await chrome.storage.local.get(DEFAULTS);
-  if (!bindings.length || bindings.some((binding) => !binding.deviceIp) || !config.bridgeToken) {
+  if (!bindings.length
+    || bindings.some((binding) => !binding.deviceIp)
+    || !config.homeAssistantUrl
+    || !config.webhookId) {
     chrome.runtime.openOptionsPage();
   }
 });
@@ -82,18 +93,23 @@ async function handleSnapshot(input, sender) {
     if (!targets.length) {
       throw new Error("profile_not_configured");
     }
-    const endpoint = bridgeEndpoint(config.bridgeUrl);
-    if (!config.bridgeToken) throw new Error("请先在扩展设置中配置桥接令牌");
-    const settled = await Promise.allSettled(targets.map(({ deviceIp }) => publishSnapshot(
-      endpoint,
-      config.bridgeToken,
-      { ...snapshot, deviceIp },
+    if (!config.homeAssistantUrl || !config.webhookId) throw new Error("请先配置 Home Assistant Webhook");
+    const settled = await Promise.allSettled(targets.map(({ deviceIp }) => publishToDevice(
+      deviceIp,
+      snapshot,
+      config,
     )));
     const updates = {};
     settled.forEach((result, index) => {
       const { deviceIp } = targets[index];
       updates[deviceIp] = result.status === "fulfilled"
-        ? { ok: true, displayName: snapshot.displayName, followerCount: snapshot.followerCount, observedAt: snapshot.observedAt }
+        ? {
+          ok: true,
+          devicePrefix: result.value.devicePrefix,
+          displayName: snapshot.displayName,
+          followerCount: snapshot.followerCount,
+          observedAt: snapshot.observedAt,
+        }
         : { ok: false, error: String(result.reason?.message || result.reason).slice(0, 160), observedAt: new Date().toISOString() };
     });
     await mergeLastResults(updates);
@@ -147,18 +163,19 @@ function sanitizeSnapshot(input) {
   };
 }
 
-async function publishSnapshot(endpoint, token, snapshot) {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(snapshot),
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || `bridge_http_${response.status}`);
-  return result;
+async function publishToDevice(deviceIp, snapshot, config) {
+  try {
+    const device = await deviceResolver.resolve(deviceIp);
+    const customAppPayload = await buildCustomAppPayload(snapshot);
+    await postFollowerPayload(
+      { homeAssistantUrl: config.homeAssistantUrl, webhookId: config.webhookId },
+      { devicePrefix: device.devicePrefix, snapshot, customAppPayload },
+    );
+    return device;
+  } catch (error) {
+    deviceResolver.clear(deviceIp);
+    throw error;
+  }
 }
 
 function isProfileUrl(value) {
@@ -168,15 +185,6 @@ function isProfileUrl(value) {
   } catch {
     return false;
   }
-}
-
-function bridgeEndpoint(value) {
-  const url = new URL(value);
-  if (url.protocol !== "http:" || url.hostname !== "127.0.0.1") throw new Error("bridge_must_use_loopback");
-  url.pathname = "/v1/follower-count";
-  url.search = "";
-  url.hash = "";
-  return url.toString();
 }
 
 async function markManaged(tabId) {
