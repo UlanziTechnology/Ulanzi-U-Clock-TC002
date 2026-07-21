@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import test from "node:test";
 import assert from "node:assert/strict";
-import http from "node:http";
 import {
   createDeviceResolver,
   discoverDevice,
   fetchDeviceJson,
-} from "../bridge/device-discovery.js";
+} from "../extension/device-discovery.js";
 
 const VALID_BASE = { ip: "10.10.21.210", mac: "ccc4b2441bd9", appVer: "1.0.4" };
 const VALID_MQTT = {
@@ -18,21 +17,19 @@ const VALID_MQTT = {
   mqtt_prefix: "ulanzi",
 };
 
-test("discovers the native TC002 display topic from device APIs", async () => {
+test("discovers a TC002 prefix and broker without exposing MQTT credentials", async () => {
   const requestJson = async (_ip, path) => path === "/getBase" ? VALID_BASE : VALID_MQTT;
   const result = await discoverDevice("10.10.21.210", { requestJson });
   assert.equal(result.deviceIp, "10.10.21.210");
   assert.equal(result.mac, "ccc4b2441bd9");
-  assert.equal(result.topic, "ulanzi_1bd9/custom/display");
-  assert.deepEqual(result.mqtt, {
+  assert.equal(result.devicePrefix, "ulanzi_1bd9");
+  assert.deepEqual(result.mqttBroker, {
     host: "10.10.20.159",
     port: 1883,
-    username: undefined,
-    password: undefined,
-    tls: false,
-    retain: true,
-    timeoutMs: 5000,
   });
+  assert.equal("topic" in result, false);
+  assert.equal(JSON.stringify(result).includes("mqtt_name"), false);
+  assert.equal(JSON.stringify(result).includes("mqtt_pwd"), false);
 });
 
 test("rejects mismatched devices and unsafe MQTT configuration", async () => {
@@ -62,28 +59,35 @@ test("rejects mismatched devices and unsafe MQTT configuration", async () => {
   );
 });
 
-test("fetchDeviceJson resolves after bounded JSON without waiting for EOF", async (t) => {
-  const server = http.createServer((_request, response) => {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    response.write(JSON.stringify({ ip: "127.0.0.1", mac: "ccc4b2441bd9" }));
-  });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  t.after(() => server.close());
-
-  const result = await fetchDeviceJson("127.0.0.1", "/getBase", {
-    port: server.address().port,
-    timeoutMs: 250,
-  });
+test("fetchDeviceJson performs a credential-free bounded browser request", async () => {
+  let request;
+  const fetchImpl = async (url, options) => {
+    request = { url, options };
+    return new Response(JSON.stringify({ ip: "10.10.21.210", mac: "ccc4b2441bd9" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+  const result = await fetchDeviceJson("10.10.21.210", "/getBase", { fetchImpl });
   assert.equal(result.mac, "ccc4b2441bd9");
+  assert.equal(request.url, "http://10.10.21.210/getBase");
+  assert.equal(request.options.credentials, "omit");
+  assert.equal(request.options.cache, "no-store");
 });
 
-test("fetchDeviceJson rejects oversized and unreachable responses with stable codes", async (t) => {
-  const server = http.createServer((_request, response) => response.end(`{"data":"${"x".repeat(128)}"}`));
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  t.after(() => server.close());
+test("fetchDeviceJson rejects oversized and unreachable responses with stable codes", async () => {
   await assert.rejects(
-    fetchDeviceJson("127.0.0.1", "/getBase", { port: server.address().port, maxBytes: 32 }),
+    fetchDeviceJson("10.10.21.210", "/getBase", {
+      maxBytes: 32,
+      fetchImpl: async () => new Response(`{"data":"${"x".repeat(128)}"}`),
+    }),
     (error) => error.code === "invalid_device_response",
+  );
+  await assert.rejects(
+    fetchDeviceJson("10.10.21.210", "/getBase", {
+      fetchImpl: async () => { throw new TypeError("offline"); },
+    }),
+    (error) => error.code === "device_unreachable",
   );
 });
 

@@ -163,7 +163,7 @@ git commit -m "feat: render TC002 payloads in Chrome"
 - Produces: `createDeviceResolver({ discover?, ttlMs?, now? }) -> { resolve, clear }`.
 - `mqttBroker` contains only `{ host, port }`; no credential fields are returned.
 
-- [ ] **Step 1: Replace Node HTTP tests with fetch-based failing tests**
+- [x] **Step 1: Replace Node HTTP tests with fetch-based failing tests**
 
 Use a deterministic fake fetch keyed by pathname:
 
@@ -200,13 +200,13 @@ Assert the result equals:
 
 Also retain tests for RFC1918 validation, returned-IP mismatch, non-TC002 model, bad MAC, disabled MQTT, invalid broker, cache TTL, forced refresh, and independent cache eviction.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run `node --test test/device-discovery.test.js`.
 
 Expected: FAIL because `extension/device-discovery.js` does not exist.
 
-- [ ] **Step 3: Implement bounded browser fetch discovery**
+- [x] **Step 3: Implement bounded browser fetch discovery**
 
 Implement:
 
@@ -233,13 +233,13 @@ export async function discoverDevice(deviceIp, {
 
 Use `AbortController`, a timeout handle, `response.ok`, `response.json()`, and an 8 KiB `Content-Length` precheck when present. Validate credential types if returned, then discard the values before returning.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 Run `node --test test/device-discovery.test.js`.
 
 Expected: all device discovery and cache tests pass.
 
-- [ ] **Step 5: Commit browser discovery**
+- [x] **Step 5: Commit browser discovery**
 
 ```bash
 git add apps/mqtt/xiaohongshu-follower-counter/extension/device-discovery.js \
