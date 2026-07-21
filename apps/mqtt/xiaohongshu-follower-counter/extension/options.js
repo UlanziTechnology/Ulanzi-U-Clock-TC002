@@ -75,7 +75,7 @@ function addBindingRow(binding = { deviceIp: "", profileUrl: "" }) {
   const row = document.createElement("div");
   row.className = "binding";
   row.append(
-    field("TC002 设备 IP", "deviceIp", binding.deviceIp, "10.10.21.210"),
+    field("TC002 设备 IP", "deviceIp", binding.deviceIp, "TC002 的局域网 IPv4"),
     field("小红书用户主页 URL", "profileUrl", binding.profileUrl, "https://www.xiaohongshu.com/user/profile/..."),
   );
   const remove = document.createElement("button");

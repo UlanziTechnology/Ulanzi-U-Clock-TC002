@@ -1,19 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { readdir } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
-import { dirname, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const extension = resolve(root, "extension");
-const entries = await readdir(extension, { withFileTypes: true });
-const files = entries
-  .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
-  .map((entry) => resolve(extension, entry.name))
-  .sort();
+const files = (await Promise.all([
+  walkJavaScript(resolve(root, "extension")),
+  walkJavaScript(resolve(root, "scripts")),
+])).flat().sort();
 
 for (const file of files) {
-  const result = spawnSync(process.execPath, ["--check", file], { stdio: "inherit" });
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  execFileSync(process.execPath, ["--check", file], { stdio: "inherit" });
 }
-console.log(`Syntax check passed (${files.length} extension modules)`);
+console.log(`Syntax check passed (${files.length} JavaScript files)`);
+
+async function walkJavaScript(directory) {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await walkJavaScript(path));
+    else if (entry.isFile() && entry.name.endsWith(".js")) files.push(path);
+  }
+  return files;
+}
