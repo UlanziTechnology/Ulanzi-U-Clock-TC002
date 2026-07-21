@@ -66,7 +66,7 @@
 - Produces: `buildCustomAppPayload(snapshot: object, duration?: number) -> Promise<object>`.
 - Produces: `formatCount(value: unknown) -> string` and `getFollowerGlyph(size: "small" | "large", character: string) -> string[]`.
 
-- [ ] **Step 1: Point renderer tests at the browser module and await output**
+- [x] **Step 1: Point renderer tests at the browser module and await output**
 
 Change imports from `../bridge/render.js` to `../extension/render.js`, then update each call:
 
@@ -78,7 +78,7 @@ const image = decodeRgbPng(await renderFollowerPng({ ...SNAPSHOT, followerCount:
 
 Keep every existing matrix constant and pixel assertion unchanged. Add a source assertion that both extension files contain no `node:` imports and no `Buffer` reference.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run:
 
@@ -89,7 +89,7 @@ node --test test/render.test.js
 
 Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `extension/render.js`.
 
-- [ ] **Step 3: Implement a browser-compatible PNG encoder**
+- [x] **Step 3: Implement a browser-compatible PNG encoder**
 
 Implement `extension/png.js` around these exact interfaces:
 
@@ -113,7 +113,7 @@ export async function encodeRgbPng(width, height, pixels) {
 
 Implement local `crc32`, big-endian integer encoding, chunk concatenation, and scanline filter byte `0`. Reject non-positive dimensions, non-`Uint8Array` pixels, or an RGB byte length other than `width * height * 3`.
 
-- [ ] **Step 4: Port the exact renderer without visual changes**
+- [x] **Step 4: Port the exact renderer without visual changes**
 
 Copy the validated constants and drawing behavior from `bridge/render.js` into `extension/render.js`. Replace Buffer Base64 conversion with a dependency-free byte encoder:
 
@@ -134,13 +134,13 @@ export async function buildCustomAppPayload(snapshot, duration = 31_536_000) {
 }
 ```
 
-- [ ] **Step 5: Run focused tests and verify GREEN**
+- [x] **Step 5: Run focused tests and verify GREEN**
 
 Run `node --test test/render.test.js`.
 
 Expected: all renderer tests pass, including 52×16 PNG decoding and all fixed matrices.
 
-- [ ] **Step 6: Commit the browser renderer**
+- [x] **Step 6: Commit the browser renderer**
 
 ```bash
 git add apps/mqtt/xiaohongshu-follower-counter/extension/png.js \

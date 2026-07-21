@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { inflateSync } from "node:zlib";
 
 import {
@@ -8,7 +9,7 @@ import {
   formatCount,
   getFollowerGlyph,
   renderFollowerPng,
-} from "../bridge/render.js";
+} from "../extension/render.js";
 
 const SNAPSHOT = {
   profileUrl: "https://www.xiaohongshu.com/user/profile/abc",
@@ -45,9 +46,9 @@ const LARGE_M = ["11000011", "11100111", "11100111", "11111111", "11011011", "11
 const SMALL_K = ["10001", "10110", "10110", "11000", "10110", "10110", "10001"];
 const SMALL_M = ["1000001", "1110111", "1110111", "1001001", "1000001", "1000001", "1000001"];
 
-test("renderFollowerPng returns a valid 52 by 16 RGB PNG", () => {
-  const png = renderFollowerPng(SNAPSHOT);
-  assert.deepEqual(png.subarray(0, 8), Buffer.from("89504e470d0a1a0a", "hex"));
+test("renderFollowerPng returns a valid 52 by 16 RGB PNG", async () => {
+  const png = await renderFollowerPng(SNAPSHOT);
+  assert.deepEqual(Array.from(png.subarray(0, 8)), Array.from(Buffer.from("89504e470d0a1a0a", "hex")));
 
   const chunks = parsePngChunks(png);
   const ihdr = chunks.find((chunk) => chunk.type === "IHDR").data;
@@ -61,8 +62,8 @@ test("renderFollowerPng returns a valid 52 by 16 RGB PNG", () => {
   assert.ok(raw.some((byte) => byte !== 0), "render should contain lit pixels");
 });
 
-test("buildCustomAppPayload embeds the PNG in the repository custom app schema", () => {
-  const payload = buildCustomAppPayload(SNAPSHOT);
+test("buildCustomAppPayload embeds the PNG in the repository custom app schema", async () => {
+  const payload = await buildCustomAppPayload(SNAPSHOT);
   assert.equal(payload.duration, 31536000);
   assert.deepEqual(payload.text, []);
   assert.deepEqual(payload.draw, []);
@@ -71,8 +72,8 @@ test("buildCustomAppPayload embeds the PNG in the repository custom app schema",
   assert.match(payload.image[0].data, /^data:image\/png;base64,iVBOR/);
 });
 
-test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
-  const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
+test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", async () => {
+  const image = decodeRgbPng(await renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
   assert.deepEqual(pixelAt(image, 0, 3), [0, 0, 0]);
   assert.deepEqual(pixelAt(image, 1, 3), [0, 0, 0]);
   assertColorMatrix(image, LOGO_MATRIX, 2, 3);
@@ -88,17 +89,17 @@ test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", 
   assert.equal(countBounds.height, 10);
 });
 
-test("uses persisted K and M character matrices for compact counts", () => {
+test("uses persisted K and M character matrices for compact counts", async () => {
   assert.equal(formatCount(12800), "12.8K");
   assert.equal(formatCount(123456), "123K");
   assert.equal(formatCount(1234567), "1.2M");
-  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 35, 3, 1);
-  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 29, 3, 1);
+  assertScaledGlyph(decodeRgbPng(await renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 35, 3, 1);
+  assertScaledGlyph(decodeRgbPng(await renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 29, 3, 1);
 });
 
-test("renders every persisted large digit as a 5 by 10 matrix", () => {
+test("renders every persisted large digit as a 5 by 10 matrix", async () => {
   for (const [digit, matrix] of Object.entries(LARGE_DIGITS)) {
-    const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: Number(digit) }));
+    const image = decodeRgbPng(await renderFollowerPng({ ...SNAPSHOT, followerCount: Number(digit) }));
     assertScaledGlyph(image, matrix, 14, 3, 1);
   }
 });
@@ -108,7 +109,16 @@ test("persists the supplied small K and M matrices", () => {
   assert.deepEqual(getFollowerGlyph("small", "M"), SMALL_M);
 });
 
+test("browser renderer has no Node runtime dependencies", async () => {
+  for (const moduleName of ["png.js", "render.js"]) {
+    const source = await readFile(new URL(`../extension/${moduleName}`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /from\s+["']node:/);
+    assert.doesNotMatch(source, /\bBuffer\b/);
+  }
+});
+
 function parsePngChunks(png) {
+  png = Buffer.from(png.buffer, png.byteOffset, png.byteLength);
   const chunks = [];
   let offset = 8;
   while (offset < png.length) {
