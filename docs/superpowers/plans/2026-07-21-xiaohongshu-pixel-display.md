@@ -39,8 +39,8 @@ Add `decodeRgbPng`, `pixelAt`, and `litBounds` helpers that parse existing PNG c
 test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
   const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
   assertColorMatrix(image, LOGO_MATRIX, 2, 3);
-  assertScaledGlyph(image, LARGE_DIGIT_ONE, 14, 3, 1);
-  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 20, 3, 1);
+  assertScaledGlyph(image, LARGE_DIGIT_ONE, 14, 4, 1);
+  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 20, 4, 1);
 });
 ```
 
@@ -94,7 +94,7 @@ Each lit matrix cell becomes one output pixel and letter spacing remains one phy
 
 - [ ] **Step 4: Implement count positioning and formatting**
 
-For nonnegative rounded values below `10000`, return the complete decimal string. Use compact `K` at `10000+` and `M` at `1000000+`. Draw from `x=14`; vertically center the selected fixed matrix set within the 16-row canvas.
+For nonnegative rounded values below `10000`, return the complete decimal string. Use compact `K` at `10000+` and `M` at `1000000+`. Draw from `x=14`; place the selected matrix one pixel below its vertically centered position, so the large font occupies `y=4..12`.
 
 - [ ] **Step 5: Remove obsolete decoration**
 

@@ -5,6 +5,7 @@ const WIDTH = 52;
 const HEIGHT = 16;
 const COUNT_START_X = 14;
 const COUNT_WIDTH = WIDTH - COUNT_START_X;
+const TEXT_Y_OFFSET = 1;
 const BLACK = [0, 0, 0];
 const RED = [255, 46, 77];
 const WHITE = [255, 255, 255];
@@ -58,7 +59,7 @@ export function renderFollowerPng(snapshot) {
   const count = formatCount(snapshot.followerCount);
   const font = chooseFont(count);
   const fontHeight = Math.max(...Object.values(font).map((glyph) => glyph.length));
-  const y = Math.floor((HEIGHT - fontHeight) / 2);
+  const y = Math.floor((HEIGHT - fontHeight) / 2) + TEXT_Y_OFFSET;
   drawText(pixels, count, COUNT_START_X, y, WHITE, font, fontHeight);
   return encodeRgbPng(WIDTH, HEIGHT, pixels);
 }

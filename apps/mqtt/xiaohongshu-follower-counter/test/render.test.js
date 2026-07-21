@@ -67,8 +67,8 @@ test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", 
     assert.deepEqual(pixelAt(image, 12, y), [0, 0, 0]);
     assert.deepEqual(pixelAt(image, 13, y), [0, 0, 0]);
   }
-  assertScaledGlyph(image, LARGE_DIGIT_ONE, 14, 3, 1);
-  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 20, 3, 1);
+  assertScaledGlyph(image, LARGE_DIGIT_ONE, 14, 4, 1);
+  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 20, 4, 1);
 
   const countBounds = litBounds(image, 14, 51, [255, 255, 255]);
   assert.equal(countBounds.width, 11);
@@ -79,8 +79,8 @@ test("uses persisted K and M character matrices for compact counts", () => {
   assert.equal(formatCount(12800), "12.8K");
   assert.equal(formatCount(123456), "123K");
   assert.equal(formatCount(1234567), "1.2M");
-  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 35, 3, 1);
-  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 29, 3, 1);
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 35, 4, 1);
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 29, 4, 1);
 });
 
 function parsePngChunks(png) {
