@@ -461,7 +461,7 @@ git commit -m "feat: remove the local Bridge from the extension"
 - Consumes: Webhook JSON `{ devicePrefix, profileUrl, displayName, followerCount, observedAt, payload }`.
 - Produces: retained QoS 0 MQTT message on `<devicePrefix>/custom/<app_name>`.
 
-- [ ] **Step 1: Write a failing static Blueprint contract test**
+- [x] **Step 1: Write a failing static Blueprint contract test**
 
 Assert the YAML source contains:
 
@@ -474,13 +474,13 @@ Assert the YAML source contains:
 - `service: mqtt.publish`, `qos: 0`, and `retain: true`;
 - no topic taken from `trigger.json`, no MQTT credentials, and no fixed device suffix.
 
-- [ ] **Step 2: Run the Blueprint test and verify RED**
+- [x] **Step 2: Run the Blueprint test and verify RED**
 
 Run `node --test test/blueprint.test.js`.
 
 Expected: FAIL because `blueprint.yaml` does not exist.
 
-- [ ] **Step 3: Implement the Blueprint**
+- [x] **Step 3: Implement the Blueprint**
 
 Use this structure:
 
@@ -543,11 +543,11 @@ max: 20
 
 Add a second condition that rejects an app name containing characters outside ASCII letters, digits, `_`, and `-`, using a bounded Jinja namespace loop rather than relying on an unavailable regex filter.
 
-- [ ] **Step 4: Validate with Home Assistant-compatible YAML parsing and tests**
+- [x] **Step 4: Validate with Home Assistant-compatible YAML parsing and tests**
 
 Run `node --test test/blueprint.test.js` and, if `ha core check` is available in the configured HA environment, import the Blueprint and run configuration validation. The repository test must pass even when HA CLI is unavailable.
 
-- [ ] **Step 5: Commit the Blueprint**
+- [x] **Step 5: Commit the Blueprint**
 
 ```bash
 git add apps/mqtt/xiaohongshu-follower-counter/blueprint.yaml \
