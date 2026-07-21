@@ -15,6 +15,22 @@ const SNAPSHOT = {
   followerCount: 12345,
   observedAt: "2026-07-14T12:00:00.000Z",
 };
+const LOGO_MATRIX = [
+  ".RRRRRRRR.",
+  "RRRRRRRRRR",
+  "RRRWRWWWRR",
+  "RRWRRRWRRR",
+  "RRRWRRWRRR",
+  "RRWRRRWRRR",
+  "RRRRRRWRRR",
+  "RRWWRWWWRR",
+  "RRRRRRRRRR",
+  ".RRRRRRRR.",
+];
+const LARGE_DIGIT_ONE = ["00100", "01100", "11100", "00100", "00100", "00100", "00100", "11111", "11111"];
+const LARGE_DIGIT_EIGHT = ["11111", "11111", "11011", "11011", "11111", "11011", "11011", "11111", "11111"];
+const LARGE_K = ["11011", "11111", "11110", "11100", "11100", "11100", "11110", "11111", "11011"];
+const LARGE_M = ["1100011", "1100011", "1100011", "1100011", "1101011", "1111111", "1111111", "1100111", "1100011"];
 
 test("renderFollowerPng returns a valid 52 by 16 RGB PNG", () => {
   const png = renderFollowerPng(SNAPSHOT);
@@ -42,27 +58,23 @@ test("buildCustomAppPayload embeds the PNG in the repository custom app schema",
   assert.match(payload.image[0].data, /^data:image\/png;base64,iVBOR/);
 });
 
-test("renders a red Xiaohongshu icon and a large white two-digit count", () => {
+test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
   const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
-  assert.deepEqual(pixelAt(image, 1, 1), [255, 36, 66]);
-  assert.deepEqual(pixelAt(image, 4, 4), [255, 255, 255]);
-  assert.deepEqual(pixelAt(image, 0, 1), [0, 0, 0]);
+  assertColorMatrix(image, LOGO_MATRIX, 1, 3);
+  assertScaledGlyph(image, LARGE_DIGIT_ONE, 13, 3, 1);
+  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 19, 3, 1);
 
-  const countBounds = litBounds(image, 16, 51, [255, 255, 255]);
-  assert.equal(countBounds.height, 14);
-  assert.ok(countBounds.minX >= 16 && countBounds.maxX <= 51);
+  const countBounds = litBounds(image, 13, 51, [255, 255, 255]);
+  assert.equal(countBounds.width, 11);
+  assert.equal(countBounds.height, 9);
 });
 
-test("keeps up to six follower digits exact", () => {
-  assert.equal(formatCount(123456), "123456");
-  const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 123456 }));
-  const bounds = litBounds(image, 16, 51, [255, 255, 255]);
-  assert.equal(bounds.width, 35);
-  assert.equal(bounds.height, 7);
-});
-
-test("compacts seven digit follower counts", () => {
+test("uses persisted K and M character matrices for compact counts", () => {
+  assert.equal(formatCount(12800), "12.8K");
+  assert.equal(formatCount(123456), "123K");
   assert.equal(formatCount(1234567), "1.2M");
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 34, 3, 1);
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 28, 3, 1);
 });
 
 function parsePngChunks(png) {
@@ -114,4 +126,30 @@ function litBounds(image, startX, endX, color) {
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
   return { minX, maxX, minY, maxY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+function assertColorMatrix(image, matrix, startX, startY) {
+  const colors = {
+    ".": [0, 0, 0],
+    R: [255, 46, 77],
+    W: [255, 255, 255],
+  };
+  for (let y = 0; y < matrix.length; y += 1) {
+    for (let x = 0; x < matrix[y].length; x += 1) {
+      assert.deepEqual(pixelAt(image, startX + x, startY + y), colors[matrix[y][x]], `matrix pixel ${x},${y}`);
+    }
+  }
+}
+
+function assertScaledGlyph(image, matrix, startX, startY, scale) {
+  for (let y = 0; y < matrix.length; y += 1) {
+    for (let x = 0; x < matrix[y].length; x += 1) {
+      const expected = matrix[y][x] === "1" ? [255, 255, 255] : [0, 0, 0];
+      for (let dy = 0; dy < scale; dy += 1) {
+        for (let dx = 0; dx < scale; dx += 1) {
+          assert.deepEqual(pixelAt(image, startX + x * scale + dx, startY + y * scale + dy), expected, `glyph pixel ${x},${y}`);
+        }
+      }
+    }
+  }
 }

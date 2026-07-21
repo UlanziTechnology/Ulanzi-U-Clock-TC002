@@ -4,16 +4,16 @@
 
 **Goal:** Render a 52×16 TC002 image with a red Xiaohongshu icon on the left and an adaptive white follower count on the right.
 
-**Architecture:** Keep the current dependency-free RGB PNG pipeline and MQTT payload schema. Replace the current `XHS` badge, 3×5 font, and underline with a fixed 14×14 icon plus a scalable 5×7 numeric font; select scale and compact formatting from the available 36-pixel number region.
+**Architecture:** Keep the dependency-free RGB PNG pipeline and MQTT payload schema. Persist the supplied artwork as an exact 10×10 RGB logo matrix and one fixed bitmap matrix per digit/character; select scale and compact formatting from the available number region without system-font rendering.
 
 **Tech Stack:** Node.js 20+, ES modules, `node:test`, existing in-repository RGB PNG encoder.
 
 ## Global Constraints
 
 - Output remains a 52×16 RGB PNG on a pure black background.
-- Icon occupies the left 14×14 region at `(0, 1)` using `#FF2442` and white.
-- Number region is `x=16..51`; nickname, underline, and gray/white status dots are omitted.
-- Values with 1–3 digits use scale 2; 4–6 digits remain exact at scale 1; 7+ digits use a compact `M` representation.
+- The exact 10×10 logo matrix is placed at `(1, 3)` using `#FF2E4D`, white, and black cells.
+- Number region is `x=13..51`; nickname, underline, and gray/white status dots are omitted.
+- Characters have persisted small matrices plus exact large matrices extracted from the supplied artwork: digits are 5×9, `K` is 5×9, and `M` is 7×9. The renderer uses the largest set that fits. Values at 10000+ use `K`; values at 1000000+ use `M`.
 - MQTT topic discovery, `custom/display`, retained publishing, extension behavior, and payload schema do not change.
 - No third-party runtime dependency is added.
 
@@ -33,32 +33,26 @@
 
 Add `decodeRgbPng`, `pixelAt`, and `litBounds` helpers that parse existing PNG chunks, inflate IDAT bytes, require filter byte `0` on every row, and return the 52×16 RGB pixel buffer.
 
-- [ ] **Step 2: Add failing icon and two-digit layout test**
+- [ ] **Step 2: Add failing exact-matrix layout test**
 
 ```js
-test("renders a red Xiaohongshu icon and a large white two-digit count", () => {
+test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
   const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
-  assert.deepEqual(pixelAt(image, 1, 1), [255, 36, 66]);
-  assert.deepEqual(pixelAt(image, 4, 4), [255, 255, 255]);
-  assert.deepEqual(pixelAt(image, 0, 1), [0, 0, 0]);
-  const countBounds = litBounds(image, 16, 51, [255, 255, 255]);
-  assert.equal(countBounds.height, 14);
-  assert.ok(countBounds.minX >= 16 && countBounds.maxX <= 51);
+  assertColorMatrix(image, LOGO_MATRIX, 1, 3);
+  assertScaledGlyph(image, LARGE_DIGIT_ONE, 13, 3, 1);
+  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 19, 3, 1);
 });
 ```
 
 - [ ] **Step 3: Add failing exact and compact count tests**
 
 ```js
-test("keeps up to six follower digits exact", () => {
-  assert.equal(formatCount(123456), "123456");
-  const bounds = litBounds(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 123456 })), 16, 51, [255, 255, 255]);
-  assert.equal(bounds.width, 35);
-  assert.equal(bounds.height, 7);
-});
-
-test("compacts seven digit follower counts", () => {
+test("uses persisted K and M character matrices for compact counts", () => {
+  assert.equal(formatCount(12800), "12.8K");
+  assert.equal(formatCount(123456), "123K");
   assert.equal(formatCount(1234567), "1.2M");
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 34, 3, 1);
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 28, 3, 1);
 });
 ```
 
@@ -66,9 +60,9 @@ test("compacts seven digit follower counts", () => {
 
 Run: `cd apps/mqtt/xiaohongshu-follower-counter && node --test test/render.test.js`
 
-Expected: FAIL because the current renderer draws a rectangular `XHS` badge, a 3×5 count, and abbreviates `123456` as `123K`.
+Expected: FAIL because the previous renderer does not reproduce the supplied full-color logo and large character matrices exactly.
 
-### Task 2: Implement the icon and adaptive 5×7 count renderer
+### Task 2: Implement exact persisted logo and character matrices
 
 **Files:**
 - Modify: `apps/mqtt/xiaohongshu-follower-counter/bridge/render.js`
@@ -80,42 +74,27 @@ Expected: FAIL because the current renderer draws a rectangular `XHS` badge, a 3
 
 - [ ] **Step 1: Replace visual constants and font**
 
-Define `ICON_SIZE = 14`, `COUNT_START_X = 16`, `COUNT_WIDTH = 36`, and a complete 5×7 bitmap font for `0`–`9`, `.`, `K`, and `M`. Keep `RED = [255, 36, 66]` and `WHITE = [255, 255, 255]`; remove `PINK`.
+Define the exact 10×10 RGB `LOGO_MATRIX`, `COUNT_START_X = 13`, small fallback matrices, and the supplied large 5×9 digit/`K` plus 7×9 `M` matrices. Keep each asset directly in source so rendering is deterministic on every machine.
 
-- [ ] **Step 2: Implement the 14×14 icon**
+- [ ] **Step 2: Implement the exact 10×10 color logo**
 
-Draw a rounded red square from `(0, 1)` to `(13, 14)`, leaving its four corner pixels black. Overlay a fixed white pixel mask whose anchor includes `(4, 4)` and whose strokes form the compact Xiaohongshu mark. Do not draw outside `x=0..13` or `y=1..14`.
+Map every logo matrix cell directly to its persisted RGB value at `(1, 3)`. Do not procedurally construct a rounded rectangle or overlay text.
 
-Use this exact 12×8 mask at `(1, 4)`:
-
-```js
-const ICON_MARK = [
-  "#..#..####..",
-  ".##...#..#..",
-  ".##...####..",
-  "#..#..#..#..",
-  "......####..",
-  "###...#..#..",
-  ".#....####..",
-  "###...#..#..",
-];
-```
-
-- [ ] **Step 3: Implement scale-aware text measurement and drawing**
+- [ ] **Step 3: Implement font-set-aware text measurement and drawing**
 
 Use these signatures:
 
 ```js
-function drawText(pixels, text, x, y, color, scale = 1)
-function textWidth(text, scale = 1)
-function chooseScale(text)
+function drawText(pixels, text, x, y, color, font, fontHeight)
+function textWidth(text, font)
+function chooseFont(text)
 ```
 
-Each lit font cell becomes a `scale × scale` block. Letter spacing remains one physical pixel. `chooseScale` returns `2` only when the scaled text fits `COUNT_WIDTH`, otherwise `1`.
+Each lit matrix cell becomes one output pixel and letter spacing remains one physical pixel. `chooseFont` selects `LARGE_FONT` when the complete string fits `COUNT_WIDTH`, otherwise `SMALL_FONT`.
 
 - [ ] **Step 4: Implement count positioning and formatting**
 
-For nonnegative rounded values up to `999999`, return the complete decimal string. For values at or above `1000000`, return `trimDecimal(count / 1000000) + "M"`. Center the measured text within `x=16..51` and center its `7 × scale` height within 16 rows.
+For nonnegative rounded values below `10000`, return the complete decimal string. Use compact `K` at `10000+` and `M` at `1000000+`. Draw from `x=13`; vertically center the selected fixed matrix set within the 16-row canvas.
 
 - [ ] **Step 5: Remove obsolete decoration**
 
