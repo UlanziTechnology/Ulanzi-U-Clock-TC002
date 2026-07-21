@@ -102,15 +102,23 @@ async function handleSnapshot(input, sender) {
     const updates = {};
     settled.forEach((result, index) => {
       const { deviceIp } = targets[index];
-      updates[deviceIp] = result.status === "fulfilled"
-        ? {
+      if (result.status === "fulfilled") {
+        updates[deviceIp] = {
           ok: true,
           devicePrefix: result.value.devicePrefix,
           displayName: snapshot.displayName,
           followerCount: snapshot.followerCount,
           observedAt: snapshot.observedAt,
-        }
-        : { ok: false, error: String(result.reason?.message || result.reason).slice(0, 160), observedAt: new Date().toISOString() };
+        };
+        return;
+      }
+      const failure = {
+        ok: false,
+        error: String(result.reason?.message || result.reason).slice(0, 160),
+        observedAt: new Date().toISOString(),
+      };
+      if (result.reason?.devicePrefix) failure.devicePrefix = result.reason.devicePrefix;
+      updates[deviceIp] = failure;
     });
     await mergeLastResults(updates);
     if (settled.every((result) => result.status === "rejected")) throw settled[0].reason;
@@ -164,8 +172,9 @@ function sanitizeSnapshot(input) {
 }
 
 async function publishToDevice(deviceIp, snapshot, config) {
+  let device;
   try {
-    const device = await deviceResolver.resolve(deviceIp);
+    device = await deviceResolver.resolve(deviceIp);
     const customAppPayload = await buildCustomAppPayload(snapshot);
     await postFollowerPayload(
       { homeAssistantUrl: config.homeAssistantUrl, webhookId: config.webhookId },
@@ -174,7 +183,9 @@ async function publishToDevice(deviceIp, snapshot, config) {
     return device;
   } catch (error) {
     deviceResolver.clear(deviceIp);
-    throw error;
+    const failure = error instanceof Error ? error : new Error(String(error));
+    if (device?.devicePrefix) failure.devicePrefix = device.devicePrefix;
+    throw failure;
   }
 }
 
