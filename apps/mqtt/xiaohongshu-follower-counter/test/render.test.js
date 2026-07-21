@@ -6,6 +6,7 @@ import { inflateSync } from "node:zlib";
 import {
   buildCustomAppPayload,
   formatCount,
+  getFollowerGlyph,
   renderFollowerPng,
 } from "../bridge/render.js";
 
@@ -40,7 +41,9 @@ const LARGE_DIGITS = {
   "9": ["11111", "11111", "11011", "11011", "11111", "11111", "00011", "00011", "11111", "11111"],
 };
 const LARGE_K = ["110011", "110111", "110110", "111100", "111100", "111100", "111100", "110110", "110111", "110011"];
-const LARGE_M = ["1100011", "1100011", "1100011", "1100011", "1101011", "1111111", "1111111", "1100111", "1100011"];
+const LARGE_M = ["11000011", "11100111", "11100111", "11111111", "11011011", "11000011", "11000011", "11000011", "11000011", "11000011"];
+const SMALL_K = ["10001", "10110", "10110", "11000", "10110", "10110", "10001"];
+const SMALL_M = ["1000001", "1110111", "1110111", "1001001", "1000001", "1000001", "1000001"];
 
 test("renderFollowerPng returns a valid 52 by 16 RGB PNG", () => {
   const png = renderFollowerPng(SNAPSHOT);
@@ -98,6 +101,11 @@ test("renders every persisted large digit as a 5 by 10 matrix", () => {
     const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: Number(digit) }));
     assertScaledGlyph(image, matrix, 14, 3, 1);
   }
+});
+
+test("persists the supplied small K and M matrices", () => {
+  assert.deepEqual(getFollowerGlyph("small", "K"), SMALL_K);
+  assert.deepEqual(getFollowerGlyph("small", "M"), SMALL_M);
 });
 
 function parsePngChunks(png) {
