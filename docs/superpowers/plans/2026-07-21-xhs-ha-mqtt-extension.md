@@ -265,7 +265,7 @@ git commit -m "feat: discover TC002 devices in Chrome"
 - Produces: `migrateHomeAssistantConfig(storage) -> Promise<{ homeAssistantUrl, webhookId }>` and removes `bridgeUrl`/`bridgeToken`.
 - Produces: `postFollowerPayload(config, update, { fetchImpl?, timeoutMs? }) -> Promise<void>`.
 
-- [ ] **Step 1: Write failing normalization and migration tests**
+- [x] **Step 1: Write failing normalization and migration tests**
 
 Cover:
 
@@ -279,13 +279,13 @@ assert.deepEqual(requiredOrigins("http://10.10.20.10:8123", [
 
 Reject non-HTTP(S) HA URLs, embedded credentials, query/hash, non-RFC1918 plain-HTTP HA hosts other than localhost, and short/unsafe Webhook IDs. Assert migration removes `bridgeUrl` and `bridgeToken` without changing bindings or refresh seconds.
 
-- [ ] **Step 2: Run config tests and verify RED**
+- [x] **Step 2: Run config tests and verify RED**
 
 Run `node --test test/ha-config.test.js`.
 
 Expected: FAIL with missing module.
 
-- [ ] **Step 3: Implement HA configuration helpers**
+- [x] **Step 3: Implement HA configuration helpers**
 
 Use URL parsing and return only normalized values. Convert URL origins to Chrome match patterns by dropping ports because extension host match patterns are origin-scheme/host based:
 
@@ -304,7 +304,7 @@ await storage.remove(["bridgeUrl", "bridgeToken"]);
 
 only after reading any existing HA fields, and must be idempotent.
 
-- [ ] **Step 4: Write a failing Webhook body and secret-safety test**
+- [x] **Step 4: Write a failing Webhook body and secret-safety test**
 
 Call `postFollowerPayload` with a fake fetch and assert:
 
@@ -314,13 +314,13 @@ Call `postFollowerPayload` with a fake fetch and assert:
 - body contains no `topic`, `appName`, `mqttBroker`, `mqtt_name`, `mqtt_pwd`, `username`, or `password` key;
 - non-2xx, abort, and invalid update values produce stable `webhook_rejected`, `ha_unreachable`, or `invalid_webhook_payload` errors.
 
-- [ ] **Step 5: Run Webhook tests and verify RED**
+- [x] **Step 5: Run Webhook tests and verify RED**
 
 Run `node --test test/ha-webhook.test.js`.
 
 Expected: FAIL with missing module.
 
-- [ ] **Step 6: Implement bounded Webhook delivery**
+- [x] **Step 6: Implement bounded Webhook delivery**
 
 Implement the exact update shape:
 
@@ -337,13 +337,13 @@ const body = {
 
 Use a 10-second AbortController timeout. Accept any 2xx response, never parse response HTML, and never include the Webhook ID in thrown errors.
 
-- [ ] **Step 7: Run both test files and verify GREEN**
+- [x] **Step 7: Run both test files and verify GREEN**
 
 Run `node --test test/ha-config.test.js test/ha-webhook.test.js`.
 
 Expected: all tests pass.
 
-- [ ] **Step 8: Commit HA client modules**
+- [x] **Step 8: Commit HA client modules**
 
 ```bash
 git add apps/mqtt/xiaohongshu-follower-counter/extension/ha-config.js \
