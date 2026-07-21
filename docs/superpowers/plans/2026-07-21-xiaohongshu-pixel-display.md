@@ -13,7 +13,7 @@
 - Output remains a 52×16 RGB PNG on a pure black background.
 - The exact 10×10 logo matrix is placed at `(2, 3)`, leaving two black columns on its left, using `#FF2E4D`, white, and black cells.
 - The logo ends at `x=11`; `x=12..13` remain black. The number region is `x=14..51`; nickname, underline, and gray/white status dots are omitted.
-- Characters have persisted small matrices plus exact large matrices extracted from the supplied artwork: digits are 5×9, `K` is 6×10, and `M` is 7×9. The renderer uses the largest set that fits. Values at 10000+ use `K`; values at 1000000+ use `M`.
+- Characters have persisted small matrices plus exact large matrices extracted from the supplied artwork: digits are 5×10, `K` is 6×10, and `M` is 7×9. The renderer uses the largest set that fits. Values at 10000+ use `K`; values at 1000000+ use `M`.
 - MQTT topic discovery, `custom/display`, retained publishing, extension behavior, and payload schema do not change.
 - No third-party runtime dependency is added.
 
@@ -39,8 +39,8 @@ Add `decodeRgbPng`, `pixelAt`, and `litBounds` helpers that parse existing PNG c
 test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
   const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
   assertColorMatrix(image, LOGO_MATRIX, 2, 3);
-  assertScaledGlyph(image, LARGE_DIGIT_ONE, 14, 4, 1);
-  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 20, 4, 1);
+  assertScaledGlyph(image, LARGE_DIGITS["1"], 14, 3, 1);
+  assertScaledGlyph(image, LARGE_DIGITS["8"], 20, 3, 1);
 });
 ```
 
@@ -74,7 +74,7 @@ Expected: FAIL because the previous renderer does not reproduce the supplied ful
 
 - [ ] **Step 1: Replace visual constants and font**
 
-Define the exact 10×10 RGB `LOGO_MATRIX`, `COUNT_START_X = 14`, small fallback matrices, and the supplied large 5×9 digits, 6×10 `K`, plus 7×9 `M` matrices. Keep each asset directly in source so rendering is deterministic on every machine.
+Define the exact 10×10 RGB `LOGO_MATRIX`, `COUNT_START_X = 14`, small fallback matrices, and the supplied large 5×10 digits, 6×10 `K`, plus 7×9 `M` matrices. Keep each asset directly in source so rendering is deterministic on every machine.
 
 - [ ] **Step 2: Implement the exact 10×10 color logo**
 
@@ -94,7 +94,7 @@ Each lit matrix cell becomes one output pixel and letter spacing remains one phy
 
 - [ ] **Step 4: Implement count positioning and formatting**
 
-For nonnegative rounded values below `10000`, return the complete decimal string. Use compact `K` at `10000+` and `M` at `1000000+`. Draw from `x=14`; place the selected matrix one pixel below its vertically centered position, so the large font occupies `y=4..12`.
+For nonnegative rounded values below `10000`, return the complete decimal string. Use compact `K` at `10000+` and `M` at `1000000+`. Draw from `x=14`; the 10-pixel-high large font begins at `y=3` and occupies `y=3..12`.
 
 - [ ] **Step 5: Remove obsolete decoration**
 

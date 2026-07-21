@@ -27,8 +27,18 @@ const LOGO_MATRIX = [
   "RRRRRRRRRR",
   ".RRRRRRRR.",
 ];
-const LARGE_DIGIT_ONE = ["00100", "01100", "11100", "00100", "00100", "00100", "00100", "11111", "11111"];
-const LARGE_DIGIT_EIGHT = ["11111", "11111", "11011", "11011", "11111", "11011", "11011", "11111", "11111"];
+const LARGE_DIGITS = {
+  "0": ["11111", "11111", "11011", "11011", "11011", "11011", "11011", "11011", "11111", "11111"],
+  "1": ["00100", "01100", "11100", "00100", "00100", "00100", "00100", "00100", "11111", "11111"],
+  "2": ["11111", "11111", "00011", "00011", "11111", "11111", "11000", "11000", "11111", "11111"],
+  "3": ["11111", "11111", "00011", "00011", "11111", "11111", "00011", "00011", "11111", "11111"],
+  "4": ["11011", "11011", "11011", "11011", "11111", "11111", "00011", "00011", "00011", "00011"],
+  "5": ["11111", "11111", "11000", "11000", "11111", "11111", "00011", "00011", "11111", "11111"],
+  "6": ["11111", "11111", "11000", "11000", "11111", "11111", "11011", "11011", "11111", "11111"],
+  "7": ["11111", "11111", "00011", "00011", "00011", "00011", "00011", "00011", "00011", "00011"],
+  "8": ["11111", "11111", "11011", "11011", "11111", "11111", "11011", "11011", "11111", "11111"],
+  "9": ["11111", "11111", "11011", "11011", "11111", "11111", "00011", "00011", "11111", "11111"],
+};
 const LARGE_K = ["110011", "110111", "110110", "111100", "111100", "111100", "111100", "110110", "110111", "110011"];
 const LARGE_M = ["1100011", "1100011", "1100011", "1100011", "1101011", "1111111", "1111111", "1100111", "1100011"];
 
@@ -67,20 +77,27 @@ test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", 
     assert.deepEqual(pixelAt(image, 12, y), [0, 0, 0]);
     assert.deepEqual(pixelAt(image, 13, y), [0, 0, 0]);
   }
-  assertScaledGlyph(image, LARGE_DIGIT_ONE, 14, 4, 1);
-  assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 20, 4, 1);
+  assertScaledGlyph(image, LARGE_DIGITS["1"], 14, 3, 1);
+  assertScaledGlyph(image, LARGE_DIGITS["8"], 20, 3, 1);
 
   const countBounds = litBounds(image, 14, 51, [255, 255, 255]);
   assert.equal(countBounds.width, 11);
-  assert.equal(countBounds.height, 9);
+  assert.equal(countBounds.height, 10);
 });
 
 test("uses persisted K and M character matrices for compact counts", () => {
   assert.equal(formatCount(12800), "12.8K");
   assert.equal(formatCount(123456), "123K");
   assert.equal(formatCount(1234567), "1.2M");
-  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 35, 4, 1);
-  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 29, 4, 1);
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 12800 })), LARGE_K, 35, 3, 1);
+  assertScaledGlyph(decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 1234567 })), LARGE_M, 29, 3, 1);
+});
+
+test("renders every persisted large digit as a 5 by 10 matrix", () => {
+  for (const [digit, matrix] of Object.entries(LARGE_DIGITS)) {
+    const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: Number(digit) }));
+    assertScaledGlyph(image, matrix, 14, 3, 1);
+  }
 });
 
 function parsePngChunks(png) {
