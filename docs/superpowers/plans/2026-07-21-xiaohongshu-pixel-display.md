@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Output remains a 52×16 RGB PNG on a pure black background.
-- The exact 10×10 logo matrix is placed at `(1, 3)` using `#FF2E4D`, white, and black cells.
+- The exact 10×10 logo matrix is placed at `(2, 3)`, leaving two black columns on its left, using `#FF2E4D`, white, and black cells.
 - Number region is `x=13..51`; nickname, underline, and gray/white status dots are omitted.
 - Characters have persisted small matrices plus exact large matrices extracted from the supplied artwork: digits are 5×9, `K` is 5×9, and `M` is 7×9. The renderer uses the largest set that fits. Values at 10000+ use `K`; values at 1000000+ use `M`.
 - MQTT topic discovery, `custom/display`, retained publishing, extension behavior, and payload schema do not change.
@@ -38,7 +38,7 @@ Add `decodeRgbPng`, `pixelAt`, and `litBounds` helpers that parse existing PNG c
 ```js
 test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
   const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
-  assertColorMatrix(image, LOGO_MATRIX, 1, 3);
+  assertColorMatrix(image, LOGO_MATRIX, 2, 3);
   assertScaledGlyph(image, LARGE_DIGIT_ONE, 13, 3, 1);
   assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 19, 3, 1);
 });
@@ -78,7 +78,7 @@ Define the exact 10×10 RGB `LOGO_MATRIX`, `COUNT_START_X = 13`, small fallback 
 
 - [ ] **Step 2: Implement the exact 10×10 color logo**
 
-Map every logo matrix cell directly to its persisted RGB value at `(1, 3)`. Do not procedurally construct a rounded rectangle or overlay text.
+Map every logo matrix cell directly to its persisted RGB value at `(2, 3)`. Do not procedurally construct a rounded rectangle or overlay text.
 
 - [ ] **Step 3: Implement font-set-aware text measurement and drawing**
 

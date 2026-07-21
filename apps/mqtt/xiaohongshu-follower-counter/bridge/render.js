@@ -88,7 +88,7 @@ function drawXiaohongshuIcon(pixels) {
   const colors = { ".": BLACK, R: RED, W: WHITE };
   for (let y = 0; y < LOGO_MATRIX.length; y += 1) {
     for (let x = 0; x < LOGO_MATRIX[y].length; x += 1) {
-      setPixel(pixels, x + 1, y + 3, colors[LOGO_MATRIX[y][x]]);
+      setPixel(pixels, x + 2, y + 3, colors[LOGO_MATRIX[y][x]]);
     }
   }
 }

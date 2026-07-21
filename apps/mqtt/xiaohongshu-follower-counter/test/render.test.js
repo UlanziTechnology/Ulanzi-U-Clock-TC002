@@ -60,7 +60,9 @@ test("buildCustomAppPayload embeds the PNG in the repository custom app schema",
 
 test("renders the persisted Xiaohongshu color matrix and fixed digit matrices", () => {
   const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
-  assertColorMatrix(image, LOGO_MATRIX, 1, 3);
+  assert.deepEqual(pixelAt(image, 0, 3), [0, 0, 0]);
+  assert.deepEqual(pixelAt(image, 1, 3), [0, 0, 0]);
+  assertColorMatrix(image, LOGO_MATRIX, 2, 3);
   assertScaledGlyph(image, LARGE_DIGIT_ONE, 13, 3, 1);
   assertScaledGlyph(image, LARGE_DIGIT_EIGHT, 19, 3, 1);
 
