@@ -3,9 +3,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
-import { renderFollowerPng } from "./render.js";
+import { renderFollowerPng } from "../extension/render.js";
 
 const output = fileURLToPath(new URL("../preview/demo.png", import.meta.url));
 await mkdir(dirname(output), { recursive: true });
-await writeFile(output, renderFollowerPng({ followerCount: 12800 }));
+await writeFile(output, await renderFollowerPng({ followerCount: 12800 }));
 console.log(output);

@@ -16,27 +16,6 @@ test("package and Chrome extension publish the same version", async () => {
   assert.equal(packageJson.version, manifest.version);
 });
 
-test("environment template keeps normal startup portable and labels legacy values", async () => {
-  const example = await readFile(new URL(".env.example", APP), "utf8");
-  for (const name of ["XHS_BRIDGE_TOKEN", "XHS_BRIDGE_PORT"]) {
-    assert.match(example, new RegExp(`^${name}=`, "m"), `.env.example should expose ${name}`);
-  }
-  for (const name of [
-    "MQTT_HOST",
-    "MQTT_PORT",
-    "MQTT_USERNAME",
-    "MQTT_PASSWORD",
-    "MQTT_TLS",
-    "MQTT_ALLOW_SELF_SIGNED",
-    "MQTT_CLIENT_ID",
-    "TC002_MQTT_TOPIC",
-  ]) {
-    assert.match(example, new RegExp(`^# ${name}=`, "m"), `.env.example should label legacy ${name}`);
-  }
-  assert.match(example, /legacy fallback/i);
-  assert.match(example, /custom\/display/);
-});
-
 test("repository ignores local operating-system and runtime files", async () => {
   const ignore = await readFile(new URL(".gitignore", REPOSITORY), "utf8");
   assert.match(ignore, /^\.DS_Store$/m);
@@ -53,7 +32,9 @@ test("package exposes one cross-platform release check", async () => {
   assert.match(packageJson.scripts.check, /npm test/);
   assert.match(packageJson.scripts.check, /check:syntax/);
   assert.match(packageJson.scripts.check, /check:release/);
-  assert.match(packageJson.scripts["check:syntax"], /extension\/refresh-config\.js/);
+  assert.equal(packageJson.scripts["check:syntax"], "node scripts/check-syntax.js");
+  const syntaxChecker = await readFile(new URL("scripts/check-syntax.js", APP), "utf8");
+  assert.match(syntaxChecker, /extension/);
   const checker = await readFile(new URL("scripts/check-release.js", APP), "utf8");
   assert.match(checker, /Release check passed/);
 });

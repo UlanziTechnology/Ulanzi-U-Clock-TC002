@@ -572,7 +572,7 @@ git commit -m "feat: add multi-device Home Assistant MQTT blueprint"
 - Consumes: Tasks 1–4 browser modules.
 - Produces: real HTTP E2E proof from fake TC002 APIs to fake HA Webhook, with no MQTT socket or Bridge process.
 
-- [ ] **Step 1: Write the replacement failing E2E test**
+- [x] **Step 1: Write the replacement failing E2E test**
 
 Start two loopback HTTP servers:
 
@@ -581,23 +581,23 @@ Start two loopback HTTP servers:
 
 Call exported discovery, render, and Webhook functions directly with URL/fetch injection. Assert the HA request contains `devicePrefix: "ulanzi_1bd9"`, follower count `12800`, and a serialized payload containing `data:image/png;base64,iVBOR`. Assert the recorded body contains neither MQTT credentials nor a `topic` field.
 
-- [ ] **Step 2: Run E2E and verify RED**
+- [x] **Step 2: Run E2E and verify RED**
 
 Run `node --test test/e2e.test.js`.
 
 Expected: FAIL because the existing test still expects a Bridge and raw MQTT socket.
 
-- [ ] **Step 3: Implement URL injection needed by E2E without weakening production validation**
+- [x] **Step 3: Implement URL injection needed by E2E without weakening production validation**
 
 Allow `discoverDevice` to accept a test-only `deviceBaseUrl` option whose default remains `http://${normalizedIp}`; expose no storage/config path for overriding it in production. Allow Webhook tests to pass a normalized loopback HA URL.
 
-- [ ] **Step 4: Run E2E and verify GREEN**
+- [x] **Step 4: Run E2E and verify GREEN**
 
 Run `node --test test/e2e.test.js`.
 
 Expected: the fake HA server receives exactly one valid body and the test passes.
 
-- [ ] **Step 5: Remove Bridge runtime and update package scripts**
+- [x] **Step 5: Remove Bridge runtime and update package scripts**
 
 Delete Bridge-only files/tests. Set package and manifest version to `0.2.0`. Replace scripts with:
 
@@ -625,7 +625,7 @@ rg -n "XHS_BRIDGE|bridgeUrl|bridgeToken|127\.0\.0\.1:17321|/v1/follower-count|no
 
 Expected: tests pass; `rg` finds no runtime or user-documentation Bridge references outside migration tests and historical design documents.
 
-- [ ] **Step 7: Commit Bridge removal**
+- [x] **Step 7: Commit Bridge removal**
 
 ```bash
 git add -A apps/mqtt/xiaohongshu-follower-counter

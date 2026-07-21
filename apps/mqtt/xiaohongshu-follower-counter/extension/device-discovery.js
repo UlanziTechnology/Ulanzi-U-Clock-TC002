@@ -37,7 +37,11 @@ export async function fetchDeviceJson(deviceIp, path, {
   }
 }
 
-export async function discoverDevice(deviceIp, { requestJson = fetchDeviceJson } = {}) {
+export async function discoverDevice(deviceIp, {
+  requestJson = fetchDeviceJson,
+  deviceBaseUrl,
+  fetchImpl,
+} = {}) {
   let normalizedDeviceIp;
   try {
     normalizedDeviceIp = privateIpv4(deviceIp);
@@ -49,8 +53,8 @@ export async function discoverDevice(deviceIp, { requestJson = fetchDeviceJson }
   let mqttConfig;
   try {
     [base, mqttConfig] = await Promise.all([
-      requestJson(normalizedDeviceIp, "/getBase"),
-      requestJson(normalizedDeviceIp, "/getMqttConfig"),
+      requestJson(normalizedDeviceIp, "/getBase", { deviceBaseUrl, fetchImpl }),
+      requestJson(normalizedDeviceIp, "/getMqttConfig", { deviceBaseUrl, fetchImpl }),
     ]);
   } catch (error) {
     if (error?.code && ["device_unreachable", "invalid_device_response"].includes(error.code)) throw error;

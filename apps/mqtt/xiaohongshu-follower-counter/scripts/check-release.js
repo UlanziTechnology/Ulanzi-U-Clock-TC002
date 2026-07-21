@@ -42,7 +42,11 @@ async function checkTrackedSources() {
     }
     if (basename(path).endsWith(".log")) failures.push(`${path}: log file`);
     if (!isTextFile(path)) continue;
-    const source = await readFile(absolute, "utf8");
+    const source = await readFile(absolute, "utf8").catch((error) => {
+      if (error.code === "ENOENT") return null;
+      throw error;
+    });
+    if (source === null) continue;
     for (const { pattern, reason } of FORBIDDEN_TEXT) {
       if (pattern.test(source)) failures.push(`${path}: contains ${reason}`);
     }

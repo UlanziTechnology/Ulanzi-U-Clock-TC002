@@ -1,6 +1,6 @@
 {
   "name": "tc002-xiaohongshu-follower-counter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "GPL-3.0-or-later",
@@ -8,10 +8,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "preview": "node bridge/render-preview.js",
-    "start": "node bridge/server.js",
+    "preview": "node scripts/render-preview.js",
+    "package:extension": "node scripts/package-extension.js",
     "test": "node --test",
-    "check:syntax": "node --check bridge/config.js && node --check bridge/device-discovery.js && node --check bridge/mqtt.js && node --check bridge/png.js && node --check bridge/render.js && node --check bridge/server.js && node --check extension/bindings-config.js && node --check extension/content.js && node --check extension/extractor.js && node --check extension/options.js && node --check extension/refresh-config.js && node --check extension/service-worker.js",
+    "check:syntax": "node scripts/check-syntax.js",
     "check:release": "node scripts/check-release.js",
     "check": "npm test && npm run check:syntax && npm run check:release"
   }
