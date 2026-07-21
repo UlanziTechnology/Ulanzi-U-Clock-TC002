@@ -614,7 +614,7 @@ Delete Bridge-only files/tests. Set package and manifest version to `0.2.0`. Rep
 
 Move preview generation into `scripts/render-preview.js` and make it await the Task 1 renderer.
 
-- [ ] **Step 6: Run all tests and verify obsolete references are absent**
+- [x] **Step 6: Run all tests and verify obsolete references are absent**
 
 Run:
 
@@ -724,7 +724,7 @@ git commit -m "build: package the Chrome extension deterministically"
 **Interfaces:**
 - Produces: complete install path for extension ZIP and one-click/manual Blueprint import.
 
-- [ ] **Step 1: Rewrite docs tests first**
+- [x] **Step 1: Rewrite docs tests first**
 
 Require documentation to contain:
 
@@ -741,13 +741,13 @@ Require documentation to contain:
 - privacy statement excluding cookies, MQTT credentials, and HA tokens;
 - no Bridge startup or `XHS_BRIDGE_TOKEN` instructions.
 
-- [ ] **Step 2: Run docs tests and verify RED**
+- [x] **Step 2: Run docs tests and verify RED**
 
 Run `node --test test/docs.test.js`.
 
 Expected: FAIL on existing Bridge instructions and missing Blueprint/ZIP instructions.
 
-- [ ] **Step 3: Write QUICKSTART and root README**
+- [x] **Step 3: Write QUICKSTART and root README**
 
 The shortest successful flow must be:
 
@@ -759,13 +759,13 @@ The shortest successful flow must be:
 6. grant exact LAN origins;
 7. keep TC002 MQTT/DIY enabled and verify results.
 
-- [ ] **Step 4: Rewrite detailed docs and PR text**
+- [x] **Step 4: Rewrite detailed docs and PR text**
 
 Document architecture, migration from version 0.1.0, configuration fields, payload schema, device discovery endpoints, security boundaries, per-error troubleshooting, multi-device behavior, Blueprint tracing, retained-topic inspection, test commands, and the lack of Chrome Web Store installation.
 
 Update `docs/PR.md` to describe the HA architecture, files removed, automated test total, ZIP checksum, and exact manual evidence still required before merge.
 
-- [ ] **Step 5: Run docs and release checks and verify GREEN**
+- [x] **Step 5: Run docs and release checks and verify GREEN**
 
 Run:
 
@@ -776,7 +776,7 @@ npm run check:release
 
 Expected: both pass with no Bridge installation language.
 
-- [ ] **Step 6: Commit documentation**
+- [x] **Step 6: Commit documentation**
 
 ```bash
 git add apps/mqtt/xiaohongshu-follower-counter/README.md \

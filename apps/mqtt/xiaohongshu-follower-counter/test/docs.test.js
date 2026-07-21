@@ -9,36 +9,43 @@ const MQTT_APPS = new URL("../", APP);
 test("user documentation covers installation, privacy, configuration, and troubleshooting", async () => {
   const readme = await readFile(new URL("docs/README.md", APP), "utf8");
   for (const phrase of [
-    "Node.js 20",
-    "XHS_BRIDGE_TOKEN",
-    "MQTT_HOST",
-    "TC002_MQTT_TOPIC",
+    "xiaohongshu-follower-counter-chrome-0.2.0.zip",
+    "SHA256SUMS",
+    "shasum -a 256",
+    "Get-FileHash",
+    "Home Assistant MQTT 集成",
+    "my.home-assistant.io/redirect/blueprint_import",
+    "blueprint.yaml",
+    "Webhook ID",
+    "allowed_device_prefixes",
+    "ulanzi_1be3",
+    "ulanzi_1bd9",
+    "<devicePrefix>/custom/<appName>",
+    "自动化跟踪",
+    "retained topic",
+    "HTTP 2xx",
     "TC002 设备 IP",
     "/getBase",
     "/getMqttConfig",
     "5 分钟",
-    "custom/display",
-    "deviceIp",
     "chrome://extensions",
     "加载已解压的扩展程序",
     "不读取 Cookie",
+    "不保存 MQTT 凭证",
+    "不需要 Home Assistant 长期访问令牌",
     "故障排查",
-    "127.0.0.1",
     "npm test",
-    ".env.example",
     "PowerShell",
     "macOS",
     "Linux",
     "npm run check",
-    "11.6万",
-    "116000",
     "当前电脑",
-    "刷新间隔（秒",
-    "5 分钟",
     "300 秒",
+    "Chrome Web Store",
   ]) {
     assert.ok(readme.includes(phrase), `README should mention ${phrase}`);
   }
+  assert.doesNotMatch(readme, /XHS_BRIDGE_TOKEN|npm start|启动 Bridge|127\.0\.0\.1:17321|\/v1\/follower-count/);
 });
 
 test("rendered preview is a valid 52 by 16 PNG", async () => {
@@ -67,10 +74,22 @@ test("copy-ready PR text follows the upstream contribution checklist", async () 
     "已阅读并遵守",
     "npm run check",
     "Chrome",
+    "Home Assistant",
+    "Blueprint",
+    "SHA-256",
     "真机",
   ]) {
     assert.match(pr, new RegExp(phrase), `PR text should mention ${phrase}`);
   }
+});
+
+test("quick start links the packaged extension and one-click Blueprint import", async () => {
+  const quickstart = await readFile(new URL("docs/QUICKSTART.md", APP), "utf8");
+  assert.match(quickstart, /\.\.\/release\/xiaohongshu-follower-counter-chrome-0\.2\.0\.zip/);
+  assert.match(quickstart, /my\.home-assistant\.io\/redirect\/blueprint_import/);
+  assert.match(quickstart, /allowed_device_prefixes/);
+  assert.match(quickstart, /app_name/);
+  assert.doesNotMatch(quickstart, /Bridge|XHS_BRIDGE_TOKEN|npm start/);
 });
 
 test("application is indexed and declares GPL licensing", async () => {
