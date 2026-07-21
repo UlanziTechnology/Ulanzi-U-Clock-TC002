@@ -3,7 +3,7 @@ import { encodeRgbPng } from "./png.js";
 
 const WIDTH = 52;
 const HEIGHT = 16;
-const COUNT_START_X = 13;
+const COUNT_START_X = 14;
 const COUNT_WIDTH = WIDTH - COUNT_START_X;
 const BLACK = [0, 0, 0];
 const RED = [255, 46, 77];
