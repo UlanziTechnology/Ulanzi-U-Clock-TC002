@@ -66,10 +66,10 @@ test("options page exposes profile, refresh, Home Assistant, and Webhook setting
   assert.doesNotMatch(html, /bridgeUrl|bridgeToken|XHS_BRIDGE_TOKEN/);
   assert.match(html, /TC002 设备 IP/);
   assert.doesNotMatch(html, /id=["']profileUrls["']/);
-  assert.match(html, /刷新间隔（秒，最少 5）/);
-  assert.match(html, /id="refreshSeconds"[^>]*min="5"[^>]*step="1"[^>]*value="30"/);
-  assert.match(html, /5 秒/);
-  assert.match(html, /60 秒/);
+  assert.match(html, /刷新间隔（秒，最少 300）/);
+  assert.match(html, /id="refreshSeconds"[^>]*min="300"[^>]*step="1"[^>]*value="300"/);
+  assert.match(html, /5 分钟/);
+  assert.match(html, /屏蔽|风控/);
   assert.match(html, /type="module"/);
   assert.match(html, /当前电脑/);
   assert.match(html, /Home Assistant/);

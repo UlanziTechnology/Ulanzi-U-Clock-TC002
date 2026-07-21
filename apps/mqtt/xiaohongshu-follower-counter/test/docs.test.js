@@ -34,8 +34,8 @@ test("user documentation covers installation, privacy, configuration, and troubl
     "116000",
     "当前电脑",
     "刷新间隔（秒",
-    "5 秒",
-    "60 秒",
+    "5 分钟",
+    "300 秒",
   ]) {
     assert.ok(readme.includes(phrase), `README should mention ${phrase}`);
   }

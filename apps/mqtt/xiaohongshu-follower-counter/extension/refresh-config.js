@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-export const DEFAULT_REFRESH_SECONDS = 30;
-export const MIN_REFRESH_SECONDS = 5;
+export const DEFAULT_REFRESH_SECONDS = 300;
+export const MIN_REFRESH_SECONDS = 300;
 
 export function normalizeRefreshSeconds(value) {
   const numeric = Number(value);

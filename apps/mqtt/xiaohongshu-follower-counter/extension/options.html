@@ -39,9 +39,9 @@
     <button id="addBinding" type="button">添加设备</button>
     <p id="bindingWarning" class="hint warning"></p>
 
-    <label for="refreshSeconds">刷新间隔（秒，最少 5）</label>
-    <input id="refreshSeconds" type="number" min="5" step="1" value="30">
-    <p class="hint">5 秒仅建议短期联调；长期运行建议设置为 60 秒以上，以降低登录验证和访问限流风险。</p>
+    <label for="refreshSeconds">刷新间隔（秒，最少 300）</label>
+    <input id="refreshSeconds" type="number" min="300" step="1" value="300">
+    <p class="hint">最低 5 分钟，避免高频访问触发小红书风控或账号屏蔽；建议按实际需要设置更长间隔。</p>
 
     <button id="save" type="button">保存</button><span id="status"></span>
     <pre id="lastResult"></pre>

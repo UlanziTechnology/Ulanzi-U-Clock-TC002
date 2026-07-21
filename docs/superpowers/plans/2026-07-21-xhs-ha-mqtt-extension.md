@@ -16,6 +16,7 @@
 - One Blueprint instance supports multiple explicitly allowlisted `devicePrefix` values and one shared `app_name`.
 - The Blueprint constructs `<devicePrefix>/custom/<appName>`; the extension cannot submit an arbitrary MQTT topic or app name.
 - Existing profile/device bindings and refresh seconds migrate in place; obsolete Bridge URL/token storage is removed.
+- Refresh intervals have a hard five-minute (300-second) floor and default; migration raises shorter existing values to reduce Xiaohongshu blocking risk.
 - Existing exact Logo, numeric, `.`, `K`, and `M` pixel matrices and 52×16 layout remain byte-observable behavior.
 - Extension JavaScript contains no `node:` imports, remote-hosted code, fixed machine IPs, concrete profile IDs, MQTT credentials, or fixed extension IDs.
 - The deliverable includes extension source, a deterministic ZIP, SHA-256 checksum, Chrome developer-mode instructions, `blueprint.yaml`, and a Home Assistant My import link.
