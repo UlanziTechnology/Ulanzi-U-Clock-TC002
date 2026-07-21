@@ -861,7 +861,7 @@ If generated files are already committed and evidence causes no tracked changes,
 **Interfaces:**
 - Produces: pushed `codex/xhs-follower-local` branch and a ready-for-review upstream PR.
 
-- [ ] **Step 1: Verify branch and remote state**
+- [x] **Step 1: Verify branch and remote state**
 
 Run:
 
@@ -875,11 +875,11 @@ git log --oneline origin/main..HEAD
 
 Expected: clean worktree, branch `codex/xhs-follower-local`, and only intentional app/spec commits ahead of upstream.
 
-- [ ] **Step 2: Integrate current upstream safely**
+- [x] **Step 2: Integrate current upstream safely**
 
 Rebase or merge `origin/main` according to repository policy, never discarding unrelated upstream changes. Re-run `npm run check` after conflict resolution.
 
-- [ ] **Step 3: Push the feature branch**
+- [x] **Step 3: Push the feature branch**
 
 ```bash
 git push -u origin codex/xhs-follower-local
@@ -887,10 +887,10 @@ git push -u origin codex/xhs-follower-local
 
 If direct upstream branch creation is denied, add the authenticated user's fork as a remote, push the same branch there, and target the upstream repository from the fork.
 
-- [ ] **Step 4: Create a non-draft PR**
+- [x] **Step 4: Create a draft PR pending final real-device evidence**
 
 Use the verified text in `docs/PR.md`. The PR must summarize the architecture, Blueprint security boundary, extension permissions, ZIP/checksum, automated verification, and real TC002 evidence. Target `UlanziTechnology/Ulanzi-U-Clock-TC002:main`.
 
-- [ ] **Step 5: Verify checks and hand off**
+- [x] **Step 5: Verify checks and hand off**
 
 Report PR URL, branch, commit, check state, exact ZIP path/checksum, Blueprint import link, and any reviewer-only manual steps. Do not claim merge or Chrome Web Store availability.
