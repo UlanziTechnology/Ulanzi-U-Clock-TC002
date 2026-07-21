@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+blueprint:
+  name: TC002 小红书粉丝数（Chrome + Home Assistant）
+  description: >-
+    接收 Chrome 扩展从小红书主页读取并渲染的 52×16 粉丝数画面，
+    校验 TC002 设备前缀白名单后，通过 Home Assistant MQTT 集成发布。
+  domain: automation
+  source_url: https://github.com/UlanziTechnology/Ulanzi-U-Clock-TC002/blob/main/apps/mqtt/xiaohongshu-follower-counter/blueprint.yaml
+  input:
+    webhook_id:
+      name: Webhook ID
+      description: 使用 24–128 位随机字母、数字、下划线或连字符，并在 Chrome 扩展中填写相同值。
+      selector:
+        text: {}
+    allowed_device_prefixes:
+      name: 允许的 TC002 设备前缀
+      description: 每行一个，例如 ulanzi_1be3。扩展配置页的最近结果会显示动态发现的前缀。
+      selector:
+        text:
+          multiline: true
+    app_name:
+      name: Custom App 名称
+      description: MQTT topic 中 custom/ 后面的应用名；所有设备共用此名称。
+      default: xiaohongshu_followers
+      selector:
+        text: {}
+
+variables:
+  allowed_prefixes_text: !input allowed_device_prefixes
+  app_name: !input app_name
+
+trigger:
+  - platform: webhook
+    webhook_id: !input webhook_id
+    allowed_methods: [POST]
+    local_only: true
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set allowed = allowed_prefixes_text.splitlines()
+        | map('trim') | reject('equalto', '') | list %}
+      {{ trigger.json is mapping
+        and trigger.json.devicePrefix is string
+        and trigger.json.devicePrefix in allowed
+        and trigger.json.payload is string
+        and trigger.json.payload | length <= 200000
+        and app_name | length >= 1
+        and app_name | length <= 64 }}
+  - condition: template
+    value_template: >-
+      {% set valid_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-' %}
+      {% set ns = namespace(valid=true) %}
+      {% for character in app_name %}
+        {% if character not in valid_chars %}
+          {% set ns.valid = false %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.valid }}
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: "{{ trigger.json.devicePrefix }}/custom/{{ app_name }}"
+      payload: "{{ trigger.json.payload }}"
+      qos: 0
+      retain: true
+
+mode: queued
+max: 20

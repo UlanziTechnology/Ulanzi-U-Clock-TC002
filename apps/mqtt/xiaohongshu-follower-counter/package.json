@@ -1,0 +1,17 @@
+{
+  "name": "tc002-xiaohongshu-follower-counter",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "preview": "node scripts/render-preview.js",
+    "package:extension": "node scripts/package-extension.js",
+    "check:syntax": "node scripts/check-syntax.js",
+    "check:release": "node scripts/check-release.js",
+    "check": "npm run check:syntax && npm run check:release"
+  }
+}

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TC002 小红书粉丝数设置</title>
+    <style>
+      body { font: 14px system-ui; max-width: 680px; margin: 32px auto; padding: 0 20px; color: #202124; }
+      label { display: block; font-weight: 600; margin-top: 18px; }
+      input { box-sizing: border-box; width: 100%; margin-top: 6px; padding: 9px; }
+      button { margin-top: 20px; padding: 9px 18px; }
+      .binding { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; align-items: end; margin-top: 12px; }
+      .binding label { margin-top: 0; }
+      .binding button { margin: 0 0 1px; }
+      #addBinding { margin-top: 12px; }
+      #status { margin-left: 12px; }
+      .hint { color: #5f6368; font-size: 12px; }
+      .warning { color: #b06000; }
+      @media (max-width: 620px) { .binding { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1>TC002 小红书粉丝数</h1>
+    <p>这些设置只保存在当前电脑的 Chrome 中。扩展读取局域网 TC002 配置，并把页面数据发送到你指定的 Home Assistant。</p>
+
+    <h2>Home Assistant</h2>
+    <label for="homeAssistantUrl">Home Assistant 地址</label>
+    <input id="homeAssistantUrl" type="url" placeholder="Home Assistant 的局域网 URL">
+    <p class="hint">HTTP 地址必须位于局域网；也支持 HTTPS 地址。无需填写 Home Assistant 登录令牌。</p>
+
+    <label for="webhookId">Webhook ID</label>
+    <input id="webhookId" type="password" autocomplete="off" placeholder="蓝图实例中配置的随机 Webhook ID">
+    <p class="hint">使用蓝图中相同的 local-only（仅限本地）Webhook ID。它相当于共享密钥，请勿公开。</p>
+    <p id="permissionStatus" class="hint"></p>
+
+    <h2>设备与主页绑定</h2>
+    <p class="hint">每台 TC002 绑定一个小红书主页。请填写 TC002 设备 IP；设备和电脑需能通过同一局域网互相访问。</p>
+    <div id="bindings"></div>
+    <button id="addBinding" type="button">添加设备</button>
+    <p id="bindingWarning" class="hint warning"></p>
+
+    <label for="refreshSeconds">刷新间隔（秒，最少 300）</label>
+    <input id="refreshSeconds" type="number" min="300" step="1" value="300">
+    <p class="hint">最低 5 分钟，避免高频访问触发小红书风控或账号屏蔽；建议按实际需要设置更长间隔。</p>
+
+    <button id="save" type="button">保存</button><span id="status"></span>
+    <pre id="lastResult"></pre>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
