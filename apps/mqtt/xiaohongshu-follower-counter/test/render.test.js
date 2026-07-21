@@ -5,6 +5,7 @@ import { inflateSync } from "node:zlib";
 
 import {
   buildCustomAppPayload,
+  formatCount,
   renderFollowerPng,
 } from "../bridge/render.js";
 
@@ -41,6 +42,29 @@ test("buildCustomAppPayload embeds the PNG in the repository custom app schema",
   assert.match(payload.image[0].data, /^data:image\/png;base64,iVBOR/);
 });
 
+test("renders a red Xiaohongshu icon and a large white two-digit count", () => {
+  const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 18 }));
+  assert.deepEqual(pixelAt(image, 1, 1), [255, 36, 66]);
+  assert.deepEqual(pixelAt(image, 4, 4), [255, 255, 255]);
+  assert.deepEqual(pixelAt(image, 0, 1), [0, 0, 0]);
+
+  const countBounds = litBounds(image, 16, 51, [255, 255, 255]);
+  assert.equal(countBounds.height, 14);
+  assert.ok(countBounds.minX >= 16 && countBounds.maxX <= 51);
+});
+
+test("keeps up to six follower digits exact", () => {
+  assert.equal(formatCount(123456), "123456");
+  const image = decodeRgbPng(renderFollowerPng({ ...SNAPSHOT, followerCount: 123456 }));
+  const bounds = litBounds(image, 16, 51, [255, 255, 255]);
+  assert.equal(bounds.width, 35);
+  assert.equal(bounds.height, 7);
+});
+
+test("compacts seven digit follower counts", () => {
+  assert.equal(formatCount(1234567), "1.2M");
+});
+
 function parsePngChunks(png) {
   const chunks = [];
   let offset = 8;
@@ -52,4 +76,42 @@ function parsePngChunks(png) {
     offset += 12 + length;
   }
   return chunks;
+}
+
+function decodeRgbPng(png) {
+  const chunks = parsePngChunks(png);
+  const ihdr = chunks.find((chunk) => chunk.type === "IHDR").data;
+  const width = ihdr.readUInt32BE(0);
+  const height = ihdr.readUInt32BE(4);
+  const raw = inflateSync(Buffer.concat(chunks.filter((chunk) => chunk.type === "IDAT").map((chunk) => chunk.data)));
+  const pixels = new Uint8Array(width * height * 3);
+  const rowBytes = width * 3;
+  for (let y = 0; y < height; y += 1) {
+    const sourceOffset = y * (rowBytes + 1);
+    assert.equal(raw[sourceOffset], 0, "test decoder requires unfiltered PNG rows");
+    pixels.set(raw.subarray(sourceOffset + 1, sourceOffset + 1 + rowBytes), y * rowBytes);
+  }
+  return { width, height, pixels };
+}
+
+function pixelAt(image, x, y) {
+  const offset = (y * image.width + x) * 3;
+  return Array.from(image.pixels.subarray(offset, offset + 3));
+}
+
+function litBounds(image, startX, endX, color) {
+  const points = [];
+  for (let y = 0; y < image.height; y += 1) {
+    for (let x = startX; x <= endX; x += 1) {
+      if (pixelAt(image, x, y).every((channel, index) => channel === color[index])) points.push([x, y]);
+    }
+  }
+  assert.ok(points.length > 0, "expected matching lit pixels");
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  return { minX, maxX, minY, maxY, width: maxX - minX + 1, height: maxY - minY + 1 };
 }

@@ -3,37 +3,47 @@ import { encodeRgbPng } from "./png.js";
 
 const WIDTH = 52;
 const HEIGHT = 16;
+const ICON_SIZE = 14;
+const COUNT_START_X = 16;
+const COUNT_WIDTH = WIDTH - COUNT_START_X;
 const RED = [255, 36, 66];
-const PINK = [255, 142, 160];
 const WHITE = [255, 255, 255];
 const FONT = {
-  "0": ["111", "101", "101", "101", "111"],
-  "1": ["010", "110", "010", "010", "111"],
-  "2": ["110", "001", "010", "100", "111"],
-  "3": ["110", "001", "010", "001", "110"],
-  "4": ["101", "101", "111", "001", "001"],
-  "5": ["111", "100", "110", "001", "110"],
-  "6": ["011", "100", "111", "101", "111"],
-  "7": ["111", "001", "010", "010", "010"],
-  "8": ["111", "101", "111", "101", "111"],
-  "9": ["111", "101", "111", "001", "110"],
-  ".": ["0", "0", "0", "0", "1"],
-  "K": ["101", "110", "100", "110", "101"],
-  "M": ["10001", "11011", "10101", "10101", "10101"],
-  "X": ["101", "101", "010", "101", "101"],
-  "H": ["101", "101", "111", "101", "101"],
-  "S": ["111", "100", "111", "001", "111"],
+  "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+  "1": ["00100", "01100", "00100", "00100", "00100", "00100", "11111"],
+  "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+  "3": ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+  "4": ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+  "5": ["11111", "10000", "10000", "11110", "00001", "00001", "11110"],
+  "6": ["01110", "10000", "10000", "11110", "10001", "10001", "01110"],
+  "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+  "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+  "9": ["01110", "10001", "10001", "01111", "00001", "00001", "01110"],
+  ".": ["0", "0", "0", "0", "0", "1", "1"],
+  "K": ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+  "M": ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
 };
+const ICON_MARK = [
+  "#..#..####..",
+  ".##...#..#..",
+  ".##...####..",
+  "#..#..#..#..",
+  "......####..",
+  "###...#..#..",
+  ".#....####..",
+  "###...#..#..",
+];
 
 export function renderFollowerPng(snapshot) {
   const pixels = new Uint8Array(WIDTH * HEIGHT * 3);
-  drawRoundedBadge(pixels);
-  drawText(pixels, "XHS", 3, 2, WHITE);
+  drawXiaohongshuIcon(pixels);
 
   const count = formatCount(snapshot.followerCount);
-  const countWidth = textWidth(count);
-  drawText(pixels, count, Math.max(20, WIDTH - countWidth - 2), 6, WHITE);
-  drawLine(pixels, 20, 13, 50, PINK);
+  const scale = chooseScale(count);
+  const countWidth = textWidth(count, scale);
+  const x = COUNT_START_X + Math.floor((COUNT_WIDTH - countWidth) / 2);
+  const y = Math.floor((HEIGHT - FONT["0"].length * scale) / 2);
+  drawText(pixels, count, x, y, WHITE, scale);
   return encodeRgbPng(WIDTH, HEIGHT, pixels);
 }
 
@@ -50,7 +60,6 @@ export function buildCustomAppPayload(snapshot, duration = 31_536_000) {
 export function formatCount(value) {
   const count = Math.max(0, Math.round(Number(value) || 0));
   if (count >= 1_000_000) return `${trimDecimal(count / 1_000_000)}M`;
-  if (count >= 10_000) return `${trimDecimal(count / 1_000)}K`;
   return String(count);
 }
 
@@ -58,37 +67,47 @@ function trimDecimal(value) {
   return value >= 100 ? String(Math.round(value)) : value.toFixed(1).replace(/\.0$/, "");
 }
 
-function drawRoundedBadge(pixels) {
-  for (let y = 0; y < 10; y += 1) {
-    for (let x = 0; x < 18; x += 1) {
-      if ((x === 0 || x === 17) && (y === 0 || y === 9)) continue;
+function drawXiaohongshuIcon(pixels) {
+  for (let y = 1; y <= ICON_SIZE; y += 1) {
+    for (let x = 0; x < ICON_SIZE; x += 1) {
+      if ((x === 0 || x === ICON_SIZE - 1) && (y === 1 || y === ICON_SIZE)) continue;
       setPixel(pixels, x, y, RED);
+    }
+  }
+  for (let y = 0; y < ICON_MARK.length; y += 1) {
+    for (let x = 0; x < ICON_MARK[y].length; x += 1) {
+      if (ICON_MARK[y][x] === "#") setPixel(pixels, x + 1, y + 4, WHITE);
     }
   }
 }
 
-function drawText(pixels, text, x, y, color) {
+function drawText(pixels, text, x, y, color, scale = 1) {
   let cursor = x;
   for (const character of text) {
     const glyph = FONT[character] ?? FONT["0"];
     for (let gy = 0; gy < glyph.length; gy += 1) {
       for (let gx = 0; gx < glyph[gy].length; gx += 1) {
-        if (glyph[gy][gx] === "1") setPixel(pixels, cursor + gx, y + gy, color);
+        if (glyph[gy][gx] !== "1") continue;
+        for (let dy = 0; dy < scale; dy += 1) {
+          for (let dx = 0; dx < scale; dx += 1) {
+            setPixel(pixels, cursor + gx * scale + dx, y + gy * scale + dy, color);
+          }
+        }
       }
     }
-    cursor += glyph[0].length + 1;
+    cursor += glyph[0].length * scale + 1;
   }
 }
 
-function textWidth(text) {
+function textWidth(text, scale = 1) {
   return [...text].reduce((width, character, index) => {
-    const glyphWidth = (FONT[character] ?? FONT["0"])[0].length;
+    const glyphWidth = (FONT[character] ?? FONT["0"])[0].length * scale;
     return width + glyphWidth + (index === text.length - 1 ? 0 : 1);
   }, 0);
 }
 
-function drawLine(pixels, startX, y, endX, color) {
-  for (let x = startX; x <= endX; x += 1) setPixel(pixels, x, y, color);
+function chooseScale(text) {
+  return textWidth(text, 2) <= COUNT_WIDTH ? 2 : 1;
 }
 
 function setPixel(pixels, x, y, color) {
