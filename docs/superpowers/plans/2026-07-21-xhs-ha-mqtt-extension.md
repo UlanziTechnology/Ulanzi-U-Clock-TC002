@@ -797,7 +797,7 @@ git commit -m "docs: add Chrome and Home Assistant installation"
 **Interfaces:**
 - Produces: complete verification evidence and a clean Git branch ready for upstream publication.
 
-- [ ] **Step 1: Run the complete project check from a clean artifact state**
+- [x] **Step 1: Run the complete project check from a clean artifact state**
 
 Run:
 
@@ -811,7 +811,7 @@ git diff --check
 
 Expected: all tests, syntax checks, release checks, and whitespace checks exit `0`.
 
-- [ ] **Step 2: Inspect extension ZIP contents and preview**
+- [x] **Step 2: Inspect extension ZIP contents and preview**
 
 List the ZIP central directory and confirm archive-root `manifest.json`. Load the generated preview at original resolution and verify the exact Logo, two-pixel margins, 5×10 digits, and K/M matrices.
 

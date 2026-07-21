@@ -23,7 +23,7 @@ feat(mqtt/xiaohongshu-follower-counter): add local Chrome and HA follower displa
 
 ## 验证
 
-- `npm run check`：53+ 自动测试、递归 JavaScript 语法检查和发布安全扫描。
+- `npm run check`：55 项自动测试、15 个 JavaScript 文件的递归语法检查和发布安全扫描。
 - loopback HTTP E2E：模拟 TC002 两个配置接口，真实 POST 到模拟 HA Webhook，验证动态前缀、PNG payload 与凭证隔离。
 - Blueprint 静态合约：local-only POST、白名单、固定 Custom App 名称、QoS 0、retain。
 - 确定性 Chrome ZIP：两次生成 SHA-256 一致。
