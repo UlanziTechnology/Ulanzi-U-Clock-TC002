@@ -20,6 +20,4 @@ Chrome 扩展使用当前浏览器登录会话读取指定小红书主页上已�
 
 - 渲染预览：[preview/demo.png](preview/demo.png)
 - 真机素材要求：[preview/README.md](preview/README.md)
-- PR 描述草稿：[docs/PR.md](docs/PR.md)
-
 许可证：GPL-3.0-or-later。

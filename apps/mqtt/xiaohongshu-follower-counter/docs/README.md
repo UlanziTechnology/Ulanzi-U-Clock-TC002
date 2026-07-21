@@ -165,12 +165,11 @@ Blueprint 校验前缀、payload 长度和应用名后调用 `mqtt.publish`，�
 需要 Node.js 20+。在 Windows、macOS 或 Linux 的应用目录运行：
 
 ```bash
-npm test
 npm run check
 npm run package:extension
 ```
 
-自动测试包含页面解析、设备发现、固定像素渲染、HA Webhook、Blueprint 合约、真实 loopback HTTP 端到端链路、确定性 ZIP 和发布安全扫描。
+`npm run check` 会递归检查 JavaScript 语法，并验证版本、必要文件、确定性 ZIP、SHA-256 和发布安全约束。
 
 ## 已知限制
 

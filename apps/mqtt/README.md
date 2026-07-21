@@ -12,12 +12,12 @@
 
 <img src="xiaohongshu-follower-counter/preview/demo.png" width="416" alt="小红书粉丝数 52×16 预览">
 
-> **纯本地小红书粉丝数显示** —— Chrome 使用用户自己的登录态读取主页可见粉丝数，经 `127.0.0.1` 本地桥接直接发布 MQTT，不依赖第三方云服务。
+> **纯本地小红书粉丝数显示** —— Chrome 使用用户自己的登录态读取主页可见粉丝数，通过 Home Assistant Webhook 和 MQTT 集成发布到 TC002，不依赖第三方采集云服务。
 
 | | |
 |---|---|
-| **类型** | Chrome MV3 扩展 + 本地 Node MQTT 桥接 |
-| **隐私** | 不读取 Cookie；页面数据仅发送到 loopback |
+| **类型** | Chrome MV3 扩展 + Home Assistant MQTT Blueprint |
+| **隐私** | 不读取 Cookie；不保存 MQTT 凭证或 HA 长期令牌 |
 | **文档** | [xiaohongshu-follower-counter/docs/README.md](xiaohongshu-follower-counter/docs/README.md) |
 
 ---
