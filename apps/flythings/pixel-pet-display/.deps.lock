@@ -1,0 +1,324 @@
+// 该文件由Versioning自动生成
+// 它不适用于手动编辑
+{
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "easyui",
+      "version": "^2.2.0",
+      "revision": "2.6.0"
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "log",
+      "version": "0.0.0",
+      "revision": "0.0.0"
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "zkhardware",
+      "version": "0.0.0",
+      "revision": "0.0.0"
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "zknet",
+      "version": "0.0.0",
+      "revision": "0.0.0"
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "base-utility",
+      "version": "10.9.3",
+      "revision": "10.9.3",
+      "dependencies": [
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "ext4",
+          "version": "*",
+          "revision": "0.0.1"
+        }
+      ]
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "transfer-protocols",
+      "version": "3.0.0",
+      "revision": "3.0.0",
+      "dependencies": [
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "base-utility",
+          "version": "^10.0.0",
+          "revision": "10.9.3",
+          "dependencies": [
+            {
+              "repository": {
+                "id": "public",
+                "url": "https://package.flythings.cn"
+              },
+              "platform": "Z21",
+              "id": "ext4",
+              "version": "*",
+              "revision": "0.0.1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "audio-utility",
+      "version": "5.1.1",
+      "revision": "5.1.1",
+      "dependencies": [
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "mi_ao",
+          "version": "0.0.0",
+          "revision": "0.0.0",
+          "includeHeader": false
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "mi_aio",
+          "version": "0.0.0",
+          "revision": "0.0.0",
+          "includeHeader": false
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "mi_sys",
+          "version": "0.0.0",
+          "revision": "0.0.0",
+          "includeHeader": false
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "mi_common",
+          "version": "0.0.0",
+          "revision": "0.0.0"
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "apc",
+          "version": "0.0.0",
+          "revision": "0.0.0",
+          "includeHeader": false,
+          "linkLibrary": false,
+          "systemLibrary": false
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "aec",
+          "version": "0.0.0",
+          "revision": "0.0.0",
+          "linkLibrary": false,
+          "systemLibrary": false
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "cam_os_wrapper",
+          "version": "0.0.0",
+          "revision": "0.0.0",
+          "includeHeader": false
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "base-utility",
+          "version": "^10.1.3",
+          "revision": "10.9.3",
+          "dependencies": [
+            {
+              "repository": {
+                "id": "public",
+                "url": "https://package.flythings.cn"
+              },
+              "platform": "Z21",
+              "id": "ext4",
+              "version": "*",
+              "revision": "0.0.1"
+            }
+          ]
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "base-json",
+          "version": "^3.0.0",
+          "revision": "3.0.3",
+          "dependencies": [
+            {
+              "repository": {
+                "id": "public",
+                "url": "https://package.flythings.cn"
+              },
+              "platform": "Z21",
+              "id": "rapidjson",
+              "version": "1.1.0",
+              "revision": "1.1.0"
+            },
+            {
+              "repository": {
+                "id": "public",
+                "url": "https://package.flythings.cn"
+              },
+              "platform": "Z21",
+              "id": "base-utility",
+              "version": "^10.3.0",
+              "revision": "10.9.3",
+              "dependencies": [
+                {
+                  "repository": {
+                    "id": "public",
+                    "url": "https://package.flythings.cn"
+                  },
+                  "platform": "Z21",
+                  "id": "ext4",
+                  "version": "*",
+                  "revision": "0.0.1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "ffmpeg",
+      "version": "4.1.9",
+      "revision": "4.1.9"
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "z",
+      "version": "1.2.11",
+      "revision": "1.2.11"
+    },
+    {
+      "repository": {
+        "id": "public",
+        "url": "https://package.flythings.cn"
+      },
+      "platform": "Z21",
+      "id": "base-json",
+      "version": "3.0.3",
+      "revision": "3.0.3",
+      "dependencies": [
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "rapidjson",
+          "version": "1.1.0",
+          "revision": "1.1.0"
+        },
+        {
+          "repository": {
+            "id": "public",
+            "url": "https://package.flythings.cn"
+          },
+          "platform": "Z21",
+          "id": "base-utility",
+          "version": "^10.3.0",
+          "revision": "10.9.3",
+          "dependencies": [
+            {
+              "repository": {
+                "id": "public",
+                "url": "https://package.flythings.cn"
+              },
+              "platform": "Z21",
+              "id": "ext4",
+              "version": "*",
+              "revision": "0.0.1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

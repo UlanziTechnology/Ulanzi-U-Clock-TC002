@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE flythings>
+
+<manifest platform="Z21">
+    <dependencies enableOnPlatforms="Z21">
+        <package id="easyui" version="^2.2.0"/>
+        <package id="log" version="0.0.0"/>
+        <package id="zkhardware" version="0.0.0"/>
+        <package id="base-utility" version="10.9.3"/>
+        <package id="transfer-protocols" version="3.0.0"/>
+    </dependencies>
+</manifest>

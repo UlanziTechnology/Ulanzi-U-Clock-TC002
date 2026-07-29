@@ -1,0 +1,12 @@
+{
+  "name": "pixel-pet-display",
+  "displayName": "像素宠物展示窗",
+  "version": "1.0.0",
+  "type": "flythings",
+  "author": "castlewong",
+  "license": "GPL-3.0-or-later",
+  "description": "在 TC002 上运行的互动像素宠物，支持小猫、小狗、兔子以及走路、开心、吃饭、睡觉等按键交互动画。",
+  "tags": ["pet", "animation", "pixel-art", "interactive"],
+  "minFirmware": "0.2.9",
+  "homepage": "https://github.com/castlewong/Ulanzi-U-Clock-TC002"
+}
