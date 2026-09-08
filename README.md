@@ -1,208 +1,143 @@
-# Ulanzi U-Clock TC002
+# Ulanzi U-Clock TC002 · 像素时钟开源资料
 
-Ulanzi TC002 像素时钟的官方开源开发资料。本仓库面向希望在 TC002 上做二次开发的开发者，提供完整的 IDE 使用说明、平台 SDK 示例工程，以及覆盖各硬件外设的可运行 Demo。
+Ulanzi TC002（Pixbar 二代）是 **52×16 全彩 RGB 像素桌面时钟**：开箱可用官方 App 显示天气、番茄钟、社媒粉丝数等，同时开放 **MQTT / HTTP 协议**，可接入 Home Assistant、Node-RED，甚至把 Claude Code / Codex 的运行状态变成桌面红绿灯。本仓库是官方开源资料：示例工程、MQTT 应用、协议说明与二次开发文档。
 
-> 想了解使用方法、社区固件请前往产品官方页面；本仓库**只关心如何写代码、编译、烧录到 TC002**。
+> **按你的目标选入口**
+> - 不写代码，先玩起来 → [快速上手](#2-快速上手)
+> - 接入 Home Assistant / 智能家居 → [MQTT 应用](#4-mqtt-应用)
+> - Claude Code / Codex 状态红绿灯 → [Agent 配置](#6-agent-配置)
+> - 开发自己的固件应用 → [二次开发](#7-二次开发)
 
-## 硬件简介
+## 1. 产品简介
 
-| 项目 | 规格 |
-|---|---|
-| SoC 平台 | Z21 系列（基于 Linux） |
-| 显示 | 52 × 16 全彩 RGB LED 点阵，SPI 驱动 |
-| 输入 | 1 个旋钮（顺/逆/按下）+ 3 个独立按键 |
-| 音频 | 内置喇叭，支持 MP3 播放，0~6 级音量 |
-| MIC | 由 MCU 上报音量数据 |
-| 无线 | Wi-Fi + BLE（BLE 依赖 Wi-Fi 已开启） |
-| 用户 GPIO | `GPIO_06`、`GPIO_85` 两个 LED 引脚预留 |
-| 升级口 | USB-C，旁边带强制恢复按钮 |
+| 项目       | 规格                                     |
+| ---------- | ---------------------------------------- |
+| 显示       | 52×16 全彩 RGB LED 点阵（832 LED），SPI 驱动 |
+| 输入       | 1 旋钮（顺 / 逆 / 按下）+ 3 按键            |
+| 音频 / MIC | 内置喇叭（MP3，0~6 级音量）；MIC 由 MCU 上报音量 |
+| 无线       | Wi-Fi + BLE（BLE 依赖 Wi-Fi 已开启）        |
+| 扩展       | GPIO_06 / GPIO_85 预留；USB-C（U 盘模式）+ 复位按钮 |
 
-## 仓库结构
+官方 App（Ulanzi Studio V3.1.0+）开箱可用：时间 / 天气 / 世界时钟、番茄钟 / 计分板 / 秒表 / BUSY、社媒粉丝数、日程、DIY 像素图。使用说明见 [官方 Ulanzi Studio 指南](https://docs.ulanzistudio.com/tc002/en/software/ulanzi-studio.html) 与 [TC002 FAQ](https://docs.ulanzistudio.com/tc002/en/faq/)。
+
+## 2. 快速上手
+
+前置：TC002 已完成 Wi-Fi 配网，与电脑同一局域网。配网问题见 [Web Setup Guide](https://docs.ulanzistudio.com/tc002/en/software/web-setup.html)。
+
+**路线 A・网页端体验（5 分钟，免刷固件）** — 用 [PixDeck](https://github.com/cailurus/PixDeck) 在浏览器里把行情 / 天气 / 游戏 / 像素画推到时钟：
 
 ```
-.
-├── IDE使用说明/           # FlyThings IDE 开发文档（HTML + Markdown）
-│   ├── 说明文档.md
-│   ├── 说明文档.html
-│   └── resources/
-├── Z21_TC002_Demo/        # Z21 平台官方示例工程，可直接导入 IDE 编译
-│   ├── Manifest.xml       # 项目清单：平台、依赖包
-│   ├── ui/                # *.ftu 界面文件（用 IDE 可视化编辑）
-│   ├── src/
-│   │   ├── Main.cpp       # 入口：初始化 MCU、启动界面
-│   │   ├── activity/      # IDE 自动生成，请勿手动修改
-│   │   ├── logic/         # 每个 ftu 对应一个 *Logic.cc，写界面逻辑
-│   │   ├── pages/         # 各功能演示页 (Btn/Rgb/Audio/Wifi)
-│   │   ├── managers/      # KeyManager / AudioManager / McuManager 等
-│   │   ├── mcuProtocol/   # MCU 串口协议
-│   │   ├── ble/           # BLE GATT 服务
-│   │   ├── utils/         # GpioHelper 等工具
-│   │   └── dependencies/  # 私有静态库 (gatt-server) 与可执行文件
-│   ├── resources/         # 随固件打包的资源文件
-│   └── README.md          # Demo 各功能 API 速查
-├── apps/                  # 社区贡献的应用
-│   ├── flythings/         # 第三方 FlyThings 应用（设备端 C++ 工程）
-│   └── mqtt/              # Home Assistant 蓝图等 MQTT 集成方案
-├── CONTRIBUTING.md        # 贡献指南：两类应用的提交规范与 PR 流程
-├── LICENSE                # GPL-3.0-or-later 许可证全文
-└── THIRD_PARTY_NOTICES.md # 第三方组件（BlueZ、Adafruit GFX 等）声明
+git clone https://github.com/cailurus/PixDeck.git && cd PixDeck
+python3 pixbar_panel.py        # Windows: python pixbar_panel.py
+# 浏览器打开 http://127.0.0.1:8000，右上角齿轮里填时钟 IP
 ```
 
-## 快速开始
+**路线 B・MQTT + Home Assistant** — Ulanzi Studio 里配置 MQTT（电脑 IP:1883）→ HA 添加 MQTT 集成指向同一 broker → 导入社区蓝图或直接发布 payload。见 [MQTT 应用](#4-mqtt-应用)。
 
-### 1. 安装 FlyThings IDE
+**路线 C・Agent 状态灯** — Claude Code / Codex 运行时 TC002 亮红绿灯（黄 = 运行中、红 = 阻塞、绿 = 完成）。见 [Agent 配置](#6-agent-配置)。
 
-下载并安装 [FlyThings IDE](https://download.s21i.co99.net/14731609/0/0/ABUIABBPGAAglMLczgYo0Mjk3AU.zip?f=flythings-ide-win32-win32-x86-zkswe-setup.zip&v=1775706403)（Windows）。
-完整安装与界面说明见 [`IDE使用说明/说明文档.md`](IDE使用说明/说明文档.md)。
+**路线 D・二次开发** — FlyThings IDE 导入 `Z21_TC002_Demo/` 编译运行。见 [二次开发](#7-二次开发)。
 
-### 2. 导入示例工程
+## 3. 开源的项目
 
-`文件` → `导入` → `常规` → `现有项目到工作空间中`，浏览到 `Z21_TC002_Demo/`，确认后完成导入。
-
-### 3. 编译
-
-选中项目，使用快捷键 `Ctrl + Alt + Z`，或工具栏绿色三角按钮编译。
-编译产物输出到 `Release/`。
-
-### 4. 烧录调试
-
-TC002 自带 Wi-Fi，**只能用 Wi-Fi 进行 ADB 调试**（USB 数据口为 U 盘模式）：
-
-1. 设备连接到与电脑同一局域网，记下 IP；
-2. IDE → `调试配置` → `ADB配置` → 选择 **WIFI** 并填入 IP；
-3. 项目右键 → `下载调试`，或 `Ctrl + Alt + R`。
-
-下载调试**不会固化**，断电后恢复。需要持久化时使用 `镜像编译` 生成 `update.img`，拷到 FAT32 格式 TF 卡根目录后插卡上电即可触发升级。
-
-### 5. 恢复出厂固件
-
-按住 USB-C 旁的复位按钮上电，会自动刷回官方固件。
-
-## 关键 API 速查
-
-下表只列示例工程已经封装好的高层 API。底层平台 API（`EASYUICONTEXT`、`UARTCONTEXT`、`StoragePreferences`、`TimeHelper` 等）参见 IDE 说明文档。
-
-### LED 显示
-
-```cpp
-// 52*16 像素，每像素 3 字节 RGB，按行优先
-uint8_t rgbData[52 * 16 * 3];
-PageBase::sendLedData(rgbData);   // 内部已节流，帧间隔 ≥ 15ms
+```
+├── IDE使用说明/     FlyThings IDE 开发文档
+├── Z21_TC002_Demo/  官方示例工程（LED/按键/音频/MIC/Wi-Fi/BLE/GPIO 全覆盖），直接导入 IDE 编译
+├── apps/
+│   ├── flythings/   设备端 C++ 应用（pixel-pet-display 像素宠物等）
+│   └── mqtt/        社区 MQTT 应用（11 个 Home Assistant 蓝图等）
+├── CONTRIBUTING.md  贡献规范与 PR 流程
+├── LICENSE          GPL-3.0-or-later
+└── THIRD_PARTY_NOTICES.md  第三方组件声明
 ```
 
-### 按键事件
+> `apps/flythings/` 已收录首个社区应用 [pixel-pet-display](apps/flythings/pixel-pet-display/)（像素宠物展示窗），欢迎继续提交跑在设备上的 C++ 应用，见 [社区与贡献](#9-社区与贡献)。
 
-```cpp
-#include "managers/KeyManager.h"
-KeyManager::getInstance().addKeyEventCallback([](int code){
-    // E_KEYCODE_CLOCKWISE / ANTI_CLOCKWISE / KNOB_BUTTON
-    // E_KEYCODE_LEFT_BUTTON / MIDDLE_BUTTON / RIGHT_BUTTON
-});
-```
+## 4. MQTT 应用
 
-### 音频播放
+TC002 官方固件内置 MQTT，通过消息推送文字 / 图标 / 绘制指令到时钟。
 
-```cpp
-#include "managers/AudioManager.h"
-auto& audio = awtrix::AudioManager::getInstance();
-audio.setVolume(3);                  // 0~6
-audio.playAudio("/path/to/file.mp3");
-audio.pauseAudio(); audio.resumeAudio(); audio.stopAudio();
-```
+**Topic**：`[PREFIX]/custom/[APP_NAME]`（前缀默认 `ulanzi_<MAC后四位>`，如 `ulanzi_1bf6`，以设备 MQTT 配置为准；`APP_NAME` 为时钟上的 Custom App 名）
 
-### MIC 音量
-
-```cpp
-#include "managers/McuManager.h"
-McuManager::getInstance().setAutoMicReport(true);
-int mic = McuManager::getInstance().queryMicValue();
-```
-
-### Wi-Fi 与 BLE
-
-```cpp
-#include <base/wifi.h>
-#include "ble/bluetooth_service.h"
-
-base::wifiOnAndWait(10);             // 必须先开 Wi-Fi
-
-BluetoothParams p;
-p.name = "Ulanzi TC002 AB12";
-p.on_message = [](const std::string& msg) { /* ... */ };
-BluetoothService::instance().start(p);
-```
-
-可选：把 Wi-Fi/BLE 参数预置到 U 盘 `/mnt/usb1/test.cfg`：
+**Payload（UTF-8 JSON）**：
 
 ```json
-{ "ssid": "...", "pwd": "...", "isConnect": true, "ble": "MyName" }
+{"duration": 3600,
+ "text": [{"content": "Hello World", "fontHeight": 10, "x": 0, "y": 0,
+           "color": "#FFFFFF", "align": "left", "valign": "top",
+           "rect": [0, 0, 52, 16], "charSpacing": 1}],
+ "image": [{"data": "data:image/png;base64,...", "position": [0, 0]}],
+ "draw": []}
 ```
 
-`ble` 留空时设备名自动取 MAC 后四位（`Ulanzi TC002 XXXX`）。
+* `text` 文字及排版；`image` 内嵌 base64 的 PNG/GIF（无需图床）；`draw` 矢量绘制（`{"df":[0,0,52,16,"#000000"]}` 填矩形、`{"dfc":[26,8,5,"#FFCB52"]}` 填圆形）；`duration` 显示秒数。
 
-### 用户 GPIO
+**快速验证**（任一 MQTT 客户端）：
 
-```cpp
-#include "utils/GpioHelper.h"
-GpioHelper::output("GPIO_06", 1);    // 仅 GPIO_06 / GPIO_85 预留
+```
+mosquitto_pub -h <BROKER_HOST> -t ulanzi_1bf6/custom/vibe_signal \
+ -m '{"duration":3600,"text":[{"content":"Hello","fontHeight":10,"x":0,"y":0,"color":"#FFFFFF"}],"image":[],"draw":[]}'
 ```
 
-## 开发注意事项
+**社区应用**（完整收录与导入方式见 [apps/mqtt/README.md](apps/mqtt/README.md)）：
 
-- **防砖标志**：每次启动必须在入口处置位，否则系统将触发回滚到官方固件。
+| 应用 | 用途 |
+| --- | --- |
+| [vibe-coding-signal-light](apps/mqtt/vibe-coding-signal-light/) | AI 编程助手状态红绿灯（[一键导入](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FUlanziTechnology%2FUlanzi-U-Clock-TC002%2Fmain%2Fapps%2Fmqtt%2Fvibe-coding-signal-light%2Fblueprint.yaml)） |
+| [claude-bot](apps/mqtt/claude-bot/) | Claude 状态与用量展示 |
+| [pet](apps/mqtt/pet/) | 桌面像素宠物（灰猫） |
+| [fire](apps/mqtt/fire/) | 虚拟壁炉 |
+| [ci-status-board](apps/mqtt/ci-status-board/) | CI 构建状态看板 |
+| [git-contribution-heatmap](apps/mqtt/git-contribution-heatmap/) | Git 贡献热力图 |
+| [year-progress-bar](apps/mqtt/year-progress-bar/) | 年进度条 |
+| [nowplaying](apps/mqtt/nowplaying/) | 媒体正在播放（走马灯） |
+| [vocabulary-widget](apps/mqtt/vocabulary-widget/) | 单词轮播 |
+| [love-confession](apps/mqtt/love-confession/) | 应援灯牌 |
+| [xiaohongshu-follower-counter](apps/mqtt/xiaohongshu-follower-counter/) | 小红书粉丝数（Chrome 扩展 + 蓝图） |
 
-  ```cpp
-  #include <os/SystemProperties.h>
-  SystemProperties::setString("sys.zkapp.state", "running");
-  ```
+完整教程（部署 broker → 配置 TC002 → MQTTX 发命令 → HA 蓝图）：[Beginner's Guide to MQTT on TC002](https://docs.ulanzistudio.com/tc002/en/software/mqtt.html)。
 
-- **MCU 初始化必须先于 LED 刷新**：
+## 5. HTTP 协议
 
-  ```cpp
-  McuManager::getInstance().initialize(
-      new PixelMcuProto::McuParse("/dev/ttyS1", 1500000));
-  std::string ver;
-  McuManager::getInstance().queryMcuVersion(ver);
-  ```
+* **查询接口**：`curl http://<IP>/getBase`、`curl http://<IP>/getMqttConfig`；浏览器打开 `http://<IP>` 可进设备管理页（查看 / 重置）。接口由官方固件提供，字段随固件版本可能变化。
+* **Custom App HTTP 协议（推帧）**：官方固件内置，网页端工具（如 PixDeck）通过它把画面 POST 到时钟；与 MQTT 推帧格式一致，PixDeck 可在设置里切换传输方式。
+* **选型**：一次性即时推送用 HTTP；持续状态 / 自动化联动用 MQTT（更稳定、支持 retain）。
 
-- **SPI 帧率**：`sendLedData` 帧间隔不得 < 15ms，已内置节流，直接调用即可。
-- **BLE 依赖 Wi-Fi**：必须确认 Wi-Fi 起来后再启动 BLE。
-- **UI 主线程不得阻塞**：`onUI_init` / `onUI_Timer` 等回调不要做耗时操作，否则插卡升级界面无法弹出。
-- **不要手动修改** `src/activity/` 下的文件，那是 IDE 根据 `*.ftu` 自动生成的。
+## 6. Agent 配置
 
-## 示例工程包含的页面
+让 TC002 显示 AI 编程助手运行状态，链路：`Claude Code / Codex hook → Home Assistant 实体 → 蓝图 → MQTT → TC002`。
 
-| Activity | 演示内容 | 关键文件 |
-|---|---|---|
-| `mainActivity` | 主菜单，进入各 Demo | `pages/PageBase.*`、`logic/mainLogic.cc` |
-| `btnTestActivity` | 旋钮 + 三按键事件 | `pages/BtnTestPage.*` |
-| `rgbTestActivity` | LED 灯板刷帧 | `pages/RgbTestPage.*` |
-| `audioTestActivity` | 音频播放 + MIC 实时音量 | `pages/AudioTestPage.*` |
-| `wifiTestActivity` | Wi-Fi 连接 + BLE 服务 | `pages/WifiTestPage.*`、`ble/` |
+| 状态          | 灯效   | 场景             |
+| ----------- | ---- | -------------- |
+| `idle`      | 绿灯   | 一轮任务结束         |
+| `attention` | 黄灯闪烁 | 运行中 / 调用工具     |
+| `blocked`   | 红灯闪烁 | 权限请求 / 失败 / 阻塞 |
+| `off`       | 熄灭   | 无任务            |
 
-## 进一步阅读
+**最小方案**：HA 导入 [vibe-coding-signal-light 蓝图](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FUlanziTechnology%2FUlanzi-U-Clock-TC002%2Fmain%2Fapps%2Fmqtt%2Fvibe-coding-signal-light%2Fblueprint.yaml) → 建 `input_select` 实体并创建自动化 → 本地脚本（示例见 [AGENT_HOOKS.md](apps/mqtt/vibe-coding-signal-light/docs/AGENT_HOOKS.md)）通过 HA REST/webhook 更新实体 → Claude Code / Codex hook 按生命周期调用脚本（提交任务→`attention`，失败 / 权限→`blocked`，结束→`idle`）。多 session 同时运行时按 "任一 blocked→红；任一 attention→黄；否则熄灭" 聚合。
 
-- [`IDE使用说明/说明文档.md`](IDE使用说明/说明文档.md) — FlyThings IDE 完整开发指南：项目结构、Manifest、定时器、串口框架、网络、存储、ADB、镜像、远程升级等
-- [`Z21_TC002_Demo/README.md`](Z21_TC002_Demo/README.md) — 各硬件外设 Demo 的 API 说明（含旋钮/按键码、SPI、Audio、MIC、Wi-Fi/BLE、GPIO）
-- [FlyThings 依赖包仓库](https://package.flythings.cn/)
+## 7. 二次开发
 
-## 社区贡献
+1. 安装 [FlyThings IDE](https://download.s21i.co99.net/14731609/0/0/ABUIABBPGAAglMLczgYo0Mjk3AU.zip?f=flythings-ide-win32-win32-x86-zkswe-setup.zip&v=1775706403)，完整说明见 [IDE使用说明/说明文档.md](IDE使用说明/说明文档.md)
+2. 导入 `Z21_TC002_Demo/`（`文件 → 导入 → 现有项目到工作空间`）
+3. 编译：`Ctrl+Alt+Z`（产物在 `Release/`）
+4. 烧录：仅 Wi-Fi ADB——IDE `调试配置 → ADB配置 → WIFI` 填 IP → `下载调试`（`Ctrl+Alt+R`，不固化；持久化用 `镜像编译` 生成 `update.img` 放 FAT32 TF 卡根目录插卡升级）
+5. 恢复官方固件：按住 USB-C 旁复位键上电
 
-欢迎社区开发者向本仓库提交两类应用：
+**注意事项**：入口必须 `SystemProperties::setString("sys.zkapp.state","running")` 防砖；MCU 初始化先于 LED 刷新；`sendLedData` 帧间隔 ≥15ms；BLE 依赖 Wi-Fi；UI 主线程勿阻塞；勿改 `src/activity/`（IDE 自动生成）。
 
-- **FlyThings 应用** — 跑在 TC002 设备本体上的 C++ 工程，提交到 [`apps/flythings/`](apps/flythings/)
-- **MQTT 应用** — 主要为 Home Assistant 蓝图，用户在自己的 HA 实例里一键导入并通过 MQTT 控制 TC002，提交到 [`apps/mqtt/`](apps/mqtt/)（详见 [`apps/mqtt/README.md`](apps/mqtt/README.md)）
+**API 速查**（LED / 按键 / 音频 / MIC/Wi-Fi/BLE/GPIO 示例代码）：见 [Z21_TC002_Demo/README.md](Z21_TC002_Demo/README.md)。
 
-完整提交规范、目录约定、PR 流程见 **[`CONTRIBUTING.md`](CONTRIBUTING.md)**。
+## 8. 常见问题
 
-## 许可
+* **配网卡 100%？** 见 [连接排查指南](https://docs.ulanzistudio.com/tc002/en/faq/)。
+* **MQTT 发了不显示？** 检查 topic（前缀以设备配置为准）、时钟是否正在显示该 Custom App（更新内容不自动切换 App）、payload 是否为 UTF-8 JSON。
+* **PixDeck 没反应？** 确认与时钟同局域网、IP 正确、时钟停留在可被更新的界面。
 
-本项目主体代码采用 **[GNU General Public License v3.0 or later (GPL-3.0-or-later)](LICENSE)** 发布。
+## 9. 社区与贡献
 
-任何衍生作品（包括但不限于二次开发的固件、修改版的 Demo）在分发时必须：
+提交 **FlyThings 应用**（`apps/flythings/`）或 **MQTT 应用**（`apps/mqtt/`，规范见 [apps/mqtt/README.md](apps/mqtt/README.md)）。完整规范见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-- 以同样的 GPL-3.0-or-later 协议开放源代码
-- 保留原作者版权声明
-- 在文档中明确标注修改
+## 10. 许可证
 
-仓库内还包含若干第三方组件（BlueZ、Adafruit GFX 字体、FlyThings SDK 等），分别遵循其原始许可证。详见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
+[GPL-3.0-or-later](LICENSE)：衍生作品分发需同协议开源、保留版权声明、标注修改。第三方组件（BlueZ、Adafruit GFX 等）见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

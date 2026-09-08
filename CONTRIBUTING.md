@@ -11,6 +11,8 @@
 
 > 应用名 `<your-app-name>` 用小写字母 + 数字 + 短横线，例如 `weather-clock`、`stock-ticker`、`battery-monitor`。同类型下不可重名。
 >
+> 应用通过 review 合并后，会被收录到**根目录 [`README.md`](README.md) 的社区应用列表**（FlyThings 应用见"开源的项目"，MQTT 应用见"MQTT 应用"章节），作为 TC002 用户的上手入口之一。
+>
 
 
 ---
@@ -134,7 +136,7 @@ apps/flythings/<your-app-name>/
 
 ### 提交前必须满足
 
-1. **能在 FlyThings IDE 中无错编译**，并在真机或 TF 卡启动模式下运行通过
+1. **能在 FlyThings IDE 中无错编译**，并在真机或 TF 卡启动模式下运行通过。真机验证用 Wi-Fi ADB `下载调试`（`Ctrl+Alt+R`，不固化），或 `镜像编译` 生成 `update.img` 放 FAT32 TF 卡根目录插卡升级——具体步骤见根目录 [`README.md`](README.md) 的[二次开发](README.md#7-二次开发)章节
 2. **不要提交 `Release/` 编译产物**（在子目录 `.gitignore` 里加 `Release/`）
 3. **不要修改 `src/activity/` 下 IDE 自动生成的代码**
 4. **入口必须设置防砖标志**（参考 [`Z21_TC002_Demo/README.md`](Z21_TC002_Demo/README.md) 的"注意事项"）：
@@ -245,7 +247,7 @@ action:
 2. **真机验证**：截图或 GIF 必须是真实 TC002 设备上的运行画面
 3. **参数化**：所有用户可能想改的值（broker、topic、显示文字、阈值、颜色等）走蓝图 `input`
 4. **零硬编码凭证**：示例代码、文档、blueprint.yaml 中**禁止**出现真实的 broker 密码、API key
-5. **图标命名**：若提交 `icons/`，文件名用小写英文 + 短横线（`battery-low.png`），并在 `manifest.json` 里登记
+5. **图标命名**：若提交 `icons/`，文件名用小写英文 + 短横线（`battery-low.png`），并在 `docs/README.md` 中登记图标清单（MQTT 类不设 `manifest.json`，元信息由 `blueprint.yaml` 承载）
 
 ---
 

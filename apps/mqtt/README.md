@@ -1,6 +1,6 @@
 # MQTT 应用
 
-本目录收录社区贡献的 **MQTT 应用** —— 主要为 [Home Assistant 蓝图（Blueprint）](https://www.home-assistant.io/docs/blueprint/)，用户在自己的 Home Assistant 实例中一键导入后，即可通过 MQTT 与 Ulanzi TC002 像素时钟交互（推送通知、显示传感器数据、播放图标动画等）。
+本目录收录社区贡献的 **MQTT 应用** —— 主要为 [Home Assistant 蓝图（Blueprint）](https://www.home-assistant.io/docs/blueprint/)，用户在自己的 Home Assistant 实例中一键导入后，即可通过 MQTT 与 Ulanzi TC002 像素时钟交互（推送通知、显示传感器数据、播放图标动画等）。本目录是根目录 [README.md](../../README.md) 中 [MQTT 应用](../../README.md#4-mqtt-应用) 章节的详情页。
 
 > 也欢迎提交其他基于 MQTT 的集成方案，例如 Node-RED flow、openHAB rule、ESPHome automation 等。
 
@@ -36,6 +36,20 @@
 | **文档** | [vibe-coding-signal-light/docs/README.md](vibe-coding-signal-light/docs/README.md) |
 
 ---
+
+**更多应用**：
+
+| 应用 | 简介 |
+| --- | --- |
+| [ci-status-board](ci-status-board/) | CI 构建状态看板 |
+| [claude-bot](claude-bot/) | Claude 状态与用量展示 |
+| [fire](fire/) | 虚拟壁炉 |
+| [git-contribution-heatmap](git-contribution-heatmap/) | Git 贡献热力图 |
+| [love-confession](love-confession/) | 应援灯牌 |
+| [nowplaying](nowplaying/) | 正在播放（走马灯） |
+| [pet](pet/) | 桌面像素宠物（灰猫） |
+| [vocabulary-widget](vocabulary-widget/) | 单词轮播 |
+| [year-progress-bar](year-progress-bar/) | 年进度条 |
 
 > 👀 期待更多社区作品 —— 提交方法见下方。
 
@@ -141,13 +155,16 @@ git push origin mqtt/<your-app-name>
 
 ## 与 TC002 的 MQTT 通信约定
 
-> ⚠️ **该章节待官方补充：** TC002 标准 MQTT broker 地址、topic 命名约定、payload schema、鉴权方式将在固件 vX.Y.Z 发布后给出标准定义。
->
-> 在标准发布前，请：
->
-> - broker 地址 / 用户名 / 密码全部走 `blueprint.input` 参数化，**不要硬编码**
-> - 在 `docs/README.md` 中列出你的蓝图发布 / 订阅的所有 topic 及 payload 示例
-> - payload 一律使用 UTF-8 JSON 编码
+TC002 官方固件的 Custom App MQTT 约定已定义（详见根目录 [README.md 的 MQTT 应用章节](../../README.md#4-mqtt-应用)）：
+
+- **Topic 格式**：`[PREFIX]/custom/[APP_NAME]`，`[PREFIX]` 为 MQTT 前缀 + 设备 MAC 后四位（默认形如 `ulanzi_1bf6`，以设备 MQTT 配置为准）；`[APP_NAME]` 为 TC002 上的 Custom App 名称
+- **Payload**：UTF-8 JSON，支持 `text`（文字）、`image`（base64 内嵌 PNG/GIF）、`draw`（矢量绘制）、`duration`（显示秒数）等字段，完整结构与示例见主 README
+
+提交应用时仍需遵守：
+
+- broker 地址 / 用户名 / 密码全部走 `blueprint.input` 参数化，**不要硬编码**
+- 在 `docs/README.md` 中列出你的蓝图发布 / 订阅的所有 topic 及 payload 示例
+- payload 一律使用 UTF-8 JSON 编码
 
 ---
 
