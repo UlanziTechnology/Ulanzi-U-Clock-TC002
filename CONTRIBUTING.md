@@ -235,11 +235,14 @@ action:
 
 #### 3. 与 TC002 的 MQTT 通信约定
 
-> ⚠️ **该章节待官方补充：** TC002 标准 MQTT topic 与 payload schema 将在固件 vX.Y.Z 后正式发布。在标准发布前，请：
+> ✅ **TC002 标准 MQTT topic 与 payload schema 已正式发布**，见仓库 [`protocol/`](protocol/) 目录（[英文](protocol/Ulanzi_TC002_protocol-http-mqtt_en.md) / [中文](protocol/Ulanzi_TC002_protocol-http-mqtt_CN.md)）。提交前请以协议文档中的 topic 与字段为准，不要自行杜撰。
 >
-> - 在 `README.md` 中明确列出蓝图发布 / 订阅的所有 topic 及 payload 示例
-> - broker 地址在蓝图 `input` 中暴露为参数，**不要硬编码**
-> - payload 一律使用 UTF-8 JSON
+> 编写蓝图时请遵守：
+>
+> - 在 `docs/README.md` 中明确列出蓝图发布 / 订阅的所有 topic 及 payload 示例，并与协议文档保持一致
+> - broker 地址、前缀、显示文字、阈值、颜色等用户可能想改的值，在蓝图 `input` 中暴露为参数，**不要硬编码**
+> - payload 一律使用 UTF-8 JSON；注意 `text` 仅支持 ASCII（0x20–0x7E），中文请改用预渲染图片 / GIF
+> - 自定义 App 推送需先 `switchDiyApp` 切到对应 App 才会显示（推送 ≠ 切换）
 
 ### 提交前必须满足
 
