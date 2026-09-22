@@ -297,6 +297,7 @@ Success: `{"code":200,"message":"Settings saved successfully"}`
 - Platforms needing an OAuth token: **Weibo, YouTube, Instagram**; others may leave it empty. / 需鉴权的平台：微博、YouTube、Instagram。
 - Only platforms present in the request are updated; to toggle one, sending `{"socialInfos":{"xhs":{"enable":true}}}` is enough. / 只更新传入平台；仅开关可只传 enable。
 - `socialOrder` must contain all 9 indices (else 400). / 须含全部 9 个 index。
+- `GET /getSocial` response also includes two extra fields not sent on `setSocial`: `tokens` (OAuth token cache, normally `{}`) and `hiddenPlatforms` (array of platform keys hidden from the carousel, e.g. `["xhs","facebook","x"]`). They are read-only echoes from the device; ignore them when composing a `setSocial` request. / `GET /getSocial` 的返回还额外含两个字段（非 `setSocial` 入参）：`tokens`（鉴权 token 缓存，通常为 `{}`）与 `hiddenPlatforms`（被隐藏不轮播的平台 key 数组）。二者为设备回显，组请求时忽略即可。
 
 ### 5.4 Calendar Config / 日程配置 `GET /getCalendar` · `POST /setCalendar`
 
@@ -353,7 +354,7 @@ Success: `{"code":200,"message":"Settings saved successfully"}`
     "tomato":    { "focusTime": "10", "relaxTime": "10", "enable": false },
     "scoreboard":{ "enable": false },
     "stopwatch": { "enable": false },
-    "battery":   { "enable": false },
+    "battery":   { "enable": false, "lowBatteryAutoSleep": false },
     "soundlight":{ "enable": false },
     "ipshow":    { "enable": false }
   },
@@ -365,7 +366,8 @@ Success: `{"code":200,"message":"Settings saved successfully"}`
 - `weather`: `city` OR `lat`+`lon` (coordinates win if both set); `token` = OpenWeather API key (empty = server default); at least one `displayInfo` item must be `true`. / city 与经纬度二选一；displayInfo 至少一项为 true。
 - `busy`: `focusTime` ∈ {"45","30","60"} (default "30"), `relaxTime` ∈ {"10","5","15"} (default "5").
 - `tomato`: `focusTime` ∈ {"15","10","25"} (default "10"), `relaxTime` ∈ {"5","10","15"} (default "10"); focus/rest auto-rotate; short-press middle = pause/resume, long-press = reset to focus. / 专注休息自动轮换，中键暂停/恢复、长按重置。
-- scoreboard/stopwatch/battery/soundlight/ipshow: only `enable`. / 仅需 enable。
+- scoreboard/stopwatch/soundlight/ipshow: only `enable`. / 仅需 enable。
+- `battery` additionally returns `lowBatteryAutoSleep` (`true`/`false`): auto-sleep when battery is low; the field is also accepted on `setToolsConfig`. / `battery` 还返回 `lowBatteryAutoSleep`（低电量自动休眠），`setToolsConfig` 亦可写入该字段。
 - `toolsOrder` must contain all 9 indices (else 400). / 须含全部 9 个 index。
 
 ### 5.7 MQTT Config / MQTT 配置 `GET /getMqttConfig` · `POST /setMqttConfig`
