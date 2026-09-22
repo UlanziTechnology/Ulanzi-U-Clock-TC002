@@ -15,7 +15,7 @@
 | Payload format / 数据格式 | Identical to MQTT / 与 MQTT 完全一致 | Identical to HTTP / 与 HTTP 完全一致 |
 | Use case / 适用场景 | One-shot push, device config / 一次性推送、设备配置 | Continuous state, automation, retain |
 
-**Topic prefix (`PREFIX`)** = `mqtt_prefix` + `"_"` + **last two characters of the MAC address**. Example: prefix `ulanzi`, MAC ending `e5f6` → `ulanzi_e5f6`. / 前缀规则：`mqtt_prefix` + `"_"` + MAC 地址后两位。例如前缀 `ulanzi`、MAC 尾号 `e5f6` → `ulanzi_e5f6`。
+**Topic prefix (`PREFIX`)** = `mqtt_prefix` + `"_"` + **the last 2 bytes (i.e. 4 hex characters) of the MAC address**. Example: prefix `ulanzi`, MAC `A1:B2:C3:D4:E5:F6` → `ulanzi_e5f6`. / 前缀规则：`mqtt_prefix` + `"_"` + MAC 地址**后 2 字节（即 4 个十六进制字符）**。例如前缀 `ulanzi`、MAC `A1:B2:C3:D4:E5:F6` → `ulanzi_e5f6`。
 
 ---
 
@@ -302,7 +302,7 @@ Success: `{"code":200,"message":"Settings saved successfully"}`
 
 ```json
 {
-  "calnedarInfos": {
+  "calendarInfos": {
     "feishu":  { "username": "x", "password": "x", "server": "", "enable": true },
     "dingding":{ "username": "x", "password": "x", "server": "", "enable": true },
     "wecom":   { "username": "x", "password": "x", "server": "", "enable": false },
@@ -310,12 +310,12 @@ Success: `{"code":200,"message":"Settings saved successfully"}`
     "icloud":  { "username": "x", "password": "x", "server": "", "enable": false },
     "outlook": { "url": "https://...", "enable": false }
   },
-  "calnedarOrder": [1, 2, 3, 4, 5, 6]
+  "calendarOrder": [1, 2, 3, 4, 5, 6]
 }
 ```
 
 - CalDAV type (Feishu/DingTalk/WeCom/iCloud): `username` + `password` + `server`; URL-subscription type (Google/Outlook): `url` (ICS address). / CalDAV 与 URL 订阅两类字段。
-- Note: the JSON keys are `calnedarInfos` / `calnedarOrder` as documented by the device. / 键名以设备端实际接受的为准。
+- Note: the JSON keys are `calendarInfos` / `calendarOrder`, consistent with the field names returned by `GET /getCalendar` (the `calnedar*` spelling in some legacy docs is a typo). / 键名为 `calendarInfos` / `calendarOrder`，与 `GET /getCalendar` 返回的字段名一致（旧文档中的 `calnedar*` 为拼写错误）。
 
 ### 5.5 DIY Images / DIY 图片 `POST /setDiyImages` · `GET /getDiyImages` · `GET /diyFile?index=N`
 
@@ -382,7 +382,7 @@ Success: `{"code":200,"message":"Settings saved successfully"}`
 | `ip` | when enabled | Broker address (IP or domain) / 地址 |
 | `port` | when enabled | Broker port / 端口 |
 | `mqtt_name` / `mqtt_pwd` | no | Username / password / 账号密码 |
-| `mqtt_prefix` | no | Default `ulanzi`; actual prefix = prefix + `_` + MAC last-2 / 前缀 |
+| `mqtt_prefix` | no | Default `ulanzi`; actual prefix = prefix + `_` + last 2 bytes (4 hex chars) of MAC / 前缀 = 前缀名 + `_` + MAC 后 2 字节（4 个十六进制字符） |
 | `isHADiscoveryEnabled` | no | HA discovery, **default false** / 默认关闭 |
 
 ### 5.8 Device Info & Serial Number / 设备信息与序列号

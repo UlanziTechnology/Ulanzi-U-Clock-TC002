@@ -30,13 +30,13 @@ curl -X POST "http://<device-ip>/api/switchDiyApp?name=hello"
 mosquitto_pub -h <broker-ip> -t ulanzi_e5f6/custom/hello -m '{"text":[{"content":"HELLO","fontHeight":10,"align":"center","valign":"middle","color":"#FFFFFF"}]}'
 ```
 
-Replace `ulanzi_e5f6` with the device's actual topic prefix: `mqtt_prefix` + `_` + last two characters of the MAC address. MQTT must be enabled on the device first (see the protocol document, section on MQTT config).
+Replace `ulanzi_e5f6` with the device's actual topic prefix: `mqtt_prefix` + `_` + the last 2 bytes (i.e. 4 hex characters) of the MAC address. Example: MAC `A1:B2:C3:D4:E5:F6` → prefix `ulanzi_e5f6`. MQTT must be enabled on the device first (see the protocol document, section on MQTT config).
 
 ## Full Documentation
 
 Complete API and topic reference, with payload schemas and examples, in bilingual format (English + 中文):
 
-- [`protocol-http-mqtt.md`](protocol-http-mqtt.md)
+- [`Ulanzi_TC002_protocol-http-mqtt_CN.md`](Ulanzi_TC002_protocol-http-mqtt_CN.md)
 
 ## At a Glance
 

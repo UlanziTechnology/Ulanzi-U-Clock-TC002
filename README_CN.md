@@ -66,11 +66,11 @@ Ulanzi TC002 像素时钟的官方开源资料。无论你是想**不写代码�
 
 ### 找到 MQTT 主题前缀（仅 MQTT 时需要）
 
-MQTT 主题前缀 `PREFIX` = `mqtt_prefix` + `_` + 设备 MAC 地址后两位（默认 `mqtt_prefix` 为 `ulanzi`）。
+MQTT 主题前缀 `PREFIX` = `mqtt_prefix` + `_` + 设备 MAC 地址**后 2 字节（即 4 个十六进制字符）**（默认 `mqtt_prefix` 为 `ulanzi`）。
 
 **如何获取 MAC**：
 
-- Ulanzi Studio 设备页会显示 MAC，如 `A1:B2:C3:D4:E5:F6` → 末两位为 `E5F6` → 前缀 `ulanzi_e5f6`。
+- Ulanzi Studio 设备页会显示 MAC，如 `A1:B2:C3:D4:E5:F6` → 后 2 字节为 `E5F6`（4 个十六进制字符）→ 前缀 `ulanzi_e5f6`。
 - 或调用接口：`GET http://<设备IP>/getBase` → 取 `mac` 字段（如 `a1b2c3d4e5f6`）末 4 位 `e5f6`。
 
 > 使用前需先在设备上**开启 MQTT**（设置 → MQTT，或 `POST /setMqttConfig` 传 `isMqtt:true`）。见 [协议文档](#完整协议文档)。
@@ -351,7 +351,7 @@ McuManager::getInstance().queryMcuVersion(ver);
 A: 常见三个原因：① 时钟还没切到该自定义 App（推送≠切换，用 `switchDiyApp`）；② 文字含非 ASCII 字符（中文、emoji、`°`）无法渲染；③ `fontHeight` 不是 5 或 10。
 
 **Q: 怎么拿到我的 MQTT 主题前缀？**
-A: `mqtt_prefix`（默认 `ulanzi`）+ `_` + MAC 末两位。MAC 可在 Ulanzi Studio 或 `GET /getBase` 取得。如 MAC 末两位 `E5F6` → `ulanzi_e5f6`。
+A: `mqtt_prefix`（默认 `ulanzi`）+ `_` + MAC 后 2 字节（4 个十六进制字符）。MAC 可在 Ulanzi Studio 或 `GET /getBase` 取得。如 MAC 尾号 `E5F6` → `ulanzi_e5f6`。
 
 **Q: 能显示中文吗？**
 A: 不能直接显示，文字仅支持 ASCII。请先把中文渲染成 PNG/GIF，再用 `image` 元素推送。

@@ -66,10 +66,10 @@ Open Ulanzi Studio → device page, or look up your router's DHCP client list. T
 
 ### Step 2 — Find your MQTT topic prefix (MQTT only)
 
-MQTT topics are prefixed with `PREFIX` = **`mqtt_prefix` + `_` + the last two characters of the device MAC** (default `mqtt_prefix` is `ulanzi`).
+MQTT topics are prefixed with `PREFIX` = **`mqtt_prefix` + `_` + the last 2 bytes (i.e. 4 hex characters) of the device MAC** (default `mqtt_prefix` is `ulanzi`).
 
 **How to get the MAC:**
-- Ulanzi Studio device page shows the MAC, e.g. `A1:B2:C3:D4:E5:F6` → last two chars are `E5F6` → prefix `ulanzi_e5f6`.
+- Ulanzi Studio device page shows the MAC, e.g. `A1:B2:C3:D4:E5:F6` → last 2 bytes are `E5F6` (4 hex chars) → prefix `ulanzi_e5f6`.
 - Or call the HTTP API: `GET http://<device-ip>/getBase` → the `mac` field (e.g. `a1b2c3d4e5f6`) → use the last 4 hex chars `e5f6`.
 
 > MQTT must be **enabled on the device first** (Settings → MQTT, or `POST /setMqttConfig` with `isMqtt:true`). See the [Protocol Reference](#protocol-reference).
@@ -349,7 +349,7 @@ Want to share yours? See [CONTRIBUTING.md](CONTRIBUTING.md).
 A: Three usual causes — (1) the clock isn't on that custom app yet (push ≠ switch, use `switchDiyApp`); (2) the text contains non-ASCII chars (Chinese, emoji, `°`) which the clock can't render; (3) `fontHeight` is not `5` or `10`.
 
 **Q: How do I get my MQTT topic prefix?**
-A: `mqtt_prefix` (default `ulanzi`) + `_` + the last two hex chars of the MAC. Get the MAC from Ulanzi Studio or `GET /getBase`. Example MAC `…E5F6` → `ulanzi_e5f6`.
+A: `mqtt_prefix` (default `ulanzi`) + `_` + the last 2 bytes (4 hex chars) of the MAC. Get the MAC from Ulanzi Studio or `GET /getBase`. Example MAC `…E5F6` → `ulanzi_e5f6`.
 
 **Q: Can I show Chinese text?**
 A: Not directly — the text renderer is ASCII-only. Render Chinese to a PNG/GIF first and push it via the `image` element.
