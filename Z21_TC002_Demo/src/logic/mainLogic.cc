@@ -11,6 +11,9 @@
 #include "pages/BtnTestPage.h"
 #include "pages/AudioTestPage.h"
 #include "pages/WifiTestPage.h"
+#include "pages/PetPage.h"
+#include "pages/FirePage.h"
+#include "pages/PixelArtPage.h"
 #include "ble/bluetooth_service.h"
 #include "net/NetManager.h"
 #include <thread>
@@ -18,6 +21,29 @@
 #define WIFIMANAGER NETMANAGER->getWifiManager()
 #define CONFIG_PATH "/mnt/usb1/test.cfg"
 namespace {
+
+bool sPixelVisible = false;
+
+void keyEventCb(int keyCode, int keyStatus) {
+	if (!PageManager::getInstance().onKeyEvent(keyCode, keyStatus)) {
+		return;
+	}
+	if (keyCode == E_KEYCODE_CLOCKWISE) {
+		if (pixelArtPage() == "PetPage") {
+			pixelArtPage() = "FirePage";
+			PageManager::getInstance().navigateTo("FirePage");
+		} else {
+			EASYUICONTEXT->openActivity("btnTestActivity", nullptr);
+		}
+	} else if (keyCode == E_KEYCODE_ANTI_CLOCKWISE) {
+		if (pixelArtPage() == "FirePage") {
+			pixelArtPage() = "PetPage";
+			PageManager::getInstance().navigateTo("PetPage");
+		} else {
+			EASYUICONTEXT->openActivity("audioTestActivity", nullptr);
+		}
+	}
+}
 
 void loadConfigAndStart() {
 	if (!base::wifiOnAndWait(10)) {
@@ -61,8 +87,11 @@ void loadConfigAndStart() {
 
 }
 
-static S_ACTIVITY_TIMEER REGISTER_ACTIVITY_TIMER_TAB[] = {
+#define TIMER_PIXEL 1
+#define TIMER_PIXEL_MS 40
 
+static S_ACTIVITY_TIMEER REGISTER_ACTIVITY_TIMER_TAB[] = {
+	{TIMER_PIXEL, TIMER_PIXEL_MS},
 };
 
 /**
@@ -83,6 +112,8 @@ static void onUI_init(){
 	PageManager::getInstance().registerPage(std::unique_ptr<PageBase>(new RgbTestPage()));
 	PageManager::getInstance().registerPage(std::unique_ptr<PageBase>(new AudioTestPage()));
 	PageManager::getInstance().registerPage(std::unique_ptr<PageBase>(new WifiTestPage()));
+	PageManager::getInstance().registerPage(std::unique_ptr<PageBase>(new PetPage()));
+	PageManager::getInstance().registerPage(std::unique_ptr<PageBase>(new FirePage()));
 
 	KeyManager::getInstance().start();
     loadConfigAndStart();
@@ -102,20 +133,30 @@ static void onUI_intent(const Intent *intentPtr) {
  * 当界面显示时触发
  */
 static void onUI_show() {
+	if (!pixelArtActive()) {
+		return;
+	}
+	KeyManager::getInstance().addKeyEventCallback(keyEventCb);
+	sPixelVisible = true;
+	PageManager::getInstance().navigateTo(pixelArtPage());
 }
 
 /*
  * 当界面隐藏时触发
  */
 static void onUI_hide() {
-
+	sPixelVisible = false;
+	pixelArtActive() = false;
+	KeyManager::getInstance().removeKeyEventCallback(keyEventCb);
 }
 
 /*
  * 当界面完全退出时触发
  */
 static void onUI_quit() {
-
+	sPixelVisible = false;
+	pixelArtActive() = false;
+	KeyManager::getInstance().removeKeyEventCallback(keyEventCb);
 }
 
 /**
@@ -137,7 +178,11 @@ static void onProtocolDataUpdate(const SProtocolData &data) {
  */
 static bool onUI_Timer(int id){
 	switch (id) {
-
+		case TIMER_PIXEL:
+			if (sPixelVisible) {
+				PageManager::getInstance().drawCurrentPage();
+			}
+			break;
 		default:
 			break;
 	}

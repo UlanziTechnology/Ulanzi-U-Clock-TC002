@@ -2,6 +2,7 @@
 #include "uart/ProtocolSender.h"
 #include "managers/KeyManager.h"
 #include "managers/PageManager.h"
+#include "pages/PixelArtPage.h"
 namespace {
 void keyEventCb(int keyCode, int keyStatus) {
 	if(!PageManager::getInstance().onKeyEvent(keyCode, keyStatus)) {
@@ -9,7 +10,9 @@ void keyEventCb(int keyCode, int keyStatus) {
 	}
 	switch(keyCode) {
 	case E_KEYCODE_CLOCKWISE:
-		EASYUICONTEXT->openActivity("btnTestActivity", nullptr);
+		pixelArtPage() = "PetPage";
+		pixelArtActive() = true;
+		EASYUICONTEXT->openActivity("mainActivity", nullptr);
 		break;
 	case E_KEYCODE_ANTI_CLOCKWISE:
 		EASYUICONTEXT->openActivity("wifiTestActivity", nullptr);

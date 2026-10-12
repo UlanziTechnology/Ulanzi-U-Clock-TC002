@@ -2,6 +2,7 @@
 #include "uart/ProtocolSender.h"
 #include "managers/KeyManager.h"
 #include "managers/PageManager.h"
+#include "pages/PixelArtPage.h"
 namespace {
 void keyEventCb(int keyCode, int keyStatus) {
 	if(!PageManager::getInstance().onKeyEvent(keyCode, keyStatus)) {
@@ -12,7 +13,9 @@ void keyEventCb(int keyCode, int keyStatus) {
 		EASYUICONTEXT->openActivity("rgbTestActivity", nullptr);
 		break;
 	case E_KEYCODE_ANTI_CLOCKWISE:
-		EASYUICONTEXT->openActivity("audioTestActivity", nullptr);
+		pixelArtPage() = "FirePage";
+		pixelArtActive() = true;
+		EASYUICONTEXT->openActivity("mainActivity", nullptr);
 		break;
 	default:
 		break;
